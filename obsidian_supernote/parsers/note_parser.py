@@ -60,13 +60,21 @@ class NoteFileParser:
         header_end = self.file_data.find(png_signature)
 
         if header_end == -1:
-            # No PNGs found, entire file might be just header + ZIP
-            # Try to find ZIP signature
+            # No PNGs found, try to find ZIP signature
             zip_signature = b"PK\x03\x04"
             header_end = self.file_data.find(zip_signature)
 
         if header_end == -1:
-            raise ValueError("Unable to locate header boundary")
+            # Neither PNG nor ZIP found - might be a different format
+            # Try to find end of XML-like tags (look for last '>')
+            # Supernote header ends with tags like <TAG:value>
+            # Look for the pattern of end of tags followed by binary data
+            last_tag_end = self.file_data.rfind(b">", 0, 2000)  # Search first 2KB
+            if last_tag_end != -1:
+                # Header ends shortly after the last tag
+                header_end = last_tag_end + 1
+            else:
+                raise ValueError("Unable to locate header boundary")
 
         # Decode header (it's ASCII/UTF-8 text with XML-like tags)
         header_bytes = self.file_data[:header_end]

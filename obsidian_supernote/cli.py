@@ -95,12 +95,12 @@ def md_to_pdf(
         # Get file size
         size_kb = output_path.stat().st_size / 1024
 
-        console.print(f"\n[bold green]✓ Success![/bold green]")
+        console.print(f"\n[bold green]SUCCESS![/bold green]")
         console.print(f"  Generated: {output_path}")
         console.print(f"  Size: {size_kb:.1f} KB")
 
     except RuntimeError as e:
-        console.print(f"[bold red]✗ Error:[/bold red] {e}")
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
         if "Pandoc is not installed" in str(e):
             console.print("\n[cyan]Installation:[/cyan]")
             console.print("  Windows: choco install pandoc")
@@ -109,7 +109,7 @@ def md_to_pdf(
             console.print("  Or:      https://pandoc.org/installing.html")
         raise click.Abort()
     except Exception as e:
-        console.print(f"[bold red]✗ Error:[/bold red] {e}")
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
         raise click.Abort()
 
 
@@ -266,12 +266,12 @@ def inspect(note_file: str, save_images: str | None) -> None:
             console.print(f"\n[bold]Saving images to {output_dir}...[/bold]")
             saved_files = parser.save_png_images(output_dir)
             for f in saved_files:
-                console.print(f"  [green]✓[/green] {f.name}")
+                console.print(f"  [green]OK[/green] {f.name}")
 
-        console.print(f"\n[bold green]✓ Inspection complete![/bold green]")
+        console.print(f"\n[bold green]SUCCESS: Inspection complete![/bold green]")
 
     except Exception as e:
-        console.print(f"[bold red]✗ Error:[/bold red] {e}")
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
         import traceback
         console.print(traceback.format_exc())
         raise click.Abort()
