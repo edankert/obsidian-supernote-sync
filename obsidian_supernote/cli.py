@@ -4,8 +4,13 @@ import click
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
+from rich.tree import Tree
+from rich import print as rprint
 
 from obsidian_supernote import __version__
+from obsidian_supernote.converters.markdown_to_pdf import MarkdownToPdfConverter
+from obsidian_supernote.parsers.note_parser import NoteFileParser
 
 console = Console()
 
@@ -23,20 +28,42 @@ def main() -> None:
 @main.command()
 @click.argument("input_file", type=click.Path(exists=True))
 @click.argument("output_file", type=click.Path())
-@click.option("--page-size", default="A4", help="PDF page size (A4, A5, Letter)")
+@click.option("--page-size", default="A5", help="PDF page size (A4, A5, A6, Letter)")
 @click.option("--dpi", default=300, help="Image DPI for quality")
-def md_to_pdf(input_file: str, output_file: str, page_size: str, dpi: int) -> None:
+@click.option("--css", type=click.Path(exists=True), help="Custom CSS file for styling")
+def md_to_pdf(input_file: str, output_file: str, page_size: str, dpi: int, css: str | None) -> None:
     """Convert Markdown file to PDF for Supernote.
 
     Arguments:
         INPUT_FILE: Path to markdown file
         OUTPUT_FILE: Path to output PDF file
     """
-    console.print(f"[bold green]Converting[/bold green] {input_file} -> {output_file}")
-    console.print(f"Page size: {page_size}, DPI: {dpi}")
+    try:
+        input_path = Path(input_file)
+        output_path = Path(output_file)
+        css_path = Path(css) if css else None
 
-    # TODO: Implement conversion
-    console.print("[yellow]Not yet implemented - Coming soon![/yellow]")
+        console.print(f"[bold blue]Converting Markdown → PDF[/bold blue]")
+        console.print(f"  Input:  {input_path}")
+        console.print(f"  Output: {output_path}")
+        console.print(f"  Page:   {page_size}, DPI: {dpi}")
+
+        # Create converter and convert
+        converter = MarkdownToPdfConverter(page_size=page_size, dpi=dpi)
+
+        with console.status("[bold green]Converting...", spinner="dots"):
+            converter.convert(input_path, output_path, css_path)
+
+        # Get file size
+        size_kb = output_path.stat().st_size / 1024
+
+        console.print(f"\n[bold green]✓ Success![/bold green]")
+        console.print(f"  Generated: {output_path}")
+        console.print(f"  Size: {size_kb:.1f} KB")
+
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {e}")
+        raise click.Abort()
 
 
 @main.command()
@@ -96,16 +123,111 @@ def status() -> None:
 
 @main.command()
 @click.argument("note_file", type=click.Path(exists=True))
-def inspect(note_file: str) -> None:
+@click.option("--save-images", type=click.Path(), help="Directory to save extracted PNG images")
+def inspect(note_file: str, save_images: str | None) -> None:
     """Inspect a Supernote .note file structure.
 
     Arguments:
         NOTE_FILE: Path to .note file to inspect
     """
-    console.print(f"[bold blue]Inspecting[/bold blue] {note_file}\n")
+    try:
+        note_path = Path(note_file)
 
-    # TODO: Implement inspection using note parser
-    console.print("[yellow]Not yet implemented - Coming soon![/yellow]")
+        console.print(Panel.fit(
+            f"[bold cyan]Inspecting Supernote .note File[/bold cyan]\n{note_path}",
+            border_style="cyan"
+        ))
+
+        # Parse the file
+        with console.status("[bold green]Parsing file...", spinner="dots"):
+            parser = NoteFileParser(note_path)
+            data = parser.parse()
+            summary = parser.get_summary()
+
+        # Display summary
+        console.print("\n[bold]File Summary:[/bold]")
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="white")
+
+        table.add_row("File name", summary["file_name"])
+        table.add_row("File size", f"{summary['file_size_mb']} MB")
+        table.add_row("Format version", summary["format_version"])
+        table.add_row("File type", summary["file_type"])
+        table.add_row("Device", summary["device"])
+        table.add_row("Language", summary["language"])
+        table.add_row("PDF template", summary["pdf_template"])
+        table.add_row("Template MD5", summary["pdf_template_md5"][:32] + "..." if len(summary["pdf_template_md5"]) > 32 else summary["pdf_template_md5"])
+
+        console.print(table)
+
+        # Display PNG information
+        console.print(f"\n[bold]Embedded Images:[/bold]")
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="white")
+
+        table.add_row("PNG count", str(summary["png_images_count"]))
+        table.add_row("Images size", f"{summary['png_images_size_mb']} MB")
+
+        if summary["png_images_count"] > 0:
+            # Get dimensions of first image
+            first_img = parser.get_png_image(0)
+            if first_img:
+                table.add_row("Dimensions", f"{first_img.width} x {first_img.height} pixels")
+                table.add_row("Mode", first_img.mode)
+
+        console.print(table)
+
+        # Display ZIP archive information
+        console.print(f"\n[bold]Handwriting Data (ZIP):[/bold]")
+        table = Table(show_header=False, box=None, padding=(0, 2))
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="white")
+
+        table.add_row("Archive size", f"{summary['zip_archive_size_kb']} KB")
+        table.add_row("Pages", str(summary["pages_count"]))
+        table.add_row("Has handwriting", "Yes" if summary["has_handwriting"] else "No")
+
+        # Show ZIP metadata if available
+        if "meta" in data["zip_contents"]:
+            meta = data["zip_contents"]["meta"]
+            table.add_row("Application", meta.get("Application", "Unknown"))
+            table.add_row("App version", meta.get("Application_Version", "Unknown"))
+            table.add_row("Format version", meta.get("format-version", "Unknown"))
+
+        console.print(table)
+
+        # Display page details
+        if data["zip_contents"].get("pages"):
+            console.print(f"\n[bold]Pages Detail:[/bold]")
+            pages_table = Table(show_header=True, box=None)
+            pages_table.add_column("Page ID", style="cyan")
+            pages_table.add_column("Has Content", style="white")
+            pages_table.add_column("Ink Size", style="white", justify="right")
+
+            for page_id, page_data in data["zip_contents"]["pages"].items():
+                has_content = "Yes" if page_data.get("has_content") else "No"
+                ink_size = f"{page_data.get('ink_size', 0) / 1024:.1f} KB" if page_data.get("ink_size") else "N/A"
+                pages_table.add_row(page_id, has_content, ink_size)
+
+            console.print(pages_table)
+
+        # Save images if requested
+        if save_images and summary["png_images_count"] > 0:
+            output_dir = Path(save_images)
+            console.print(f"\n[bold]Saving images to {output_dir}...[/bold]")
+            saved_files = parser.save_png_images(output_dir)
+            for f in saved_files:
+                console.print(f"  [green]✓[/green] {f.name}")
+
+        console.print(f"\n[bold green]✓ Inspection complete![/bold green]")
+
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {e}")
+        import traceback
+        console.print(traceback.format_exc())
+        raise click.Abort()
 
 
 @main.command()
