@@ -1,0 +1,41 @@
+# Core dependencies
+supernotelib>=0.6.4           # Library for reading/writing Supernote .note files (supernote-tool)
+Pillow>=10.0.0                # Image processing (PNG/PDF handling)
+python-dotenv>=1.0.0          # Environment variable management
+pyyaml>=6.0                   # YAML configuration files
+
+# OCR options (choose one or more)
+google-generativeai>=0.3.0    # Google Gemini API for OCR
+# azure-cognitiveservices-vision>=0.9.0  # Alternative: Azure Computer Vision
+# pytesseract>=0.3.10         # Alternative: Offline OCR
+
+# Markdown to PDF conversion
+# Note: Pandoc must be installed separately (not a Python package)
+# Alternative Python options:
+weasyprint>=60.0              # Python-native PDF generation
+markdown>=3.5.0               # Markdown parsing
+
+# CLI and UI
+rich>=13.0.0                  # Beautiful terminal output
+click>=8.1.0                  # Command-line interface framework
+
+# File monitoring (for auto-sync)
+watchdog>=3.0.0               # File system event monitoring
+
+# HTTP/API clients
+httpx>=0.25.0                 # Modern HTTP client (for cloud sync)
+aiofiles>=23.0.0              # Async file I/O
+
+# Development dependencies
+pytest>=7.4.0                 # Testing framework
+pytest-asyncio>=0.21.0        # Async test support
+pytest-cov>=4.1.0             # Code coverage
+black>=23.0.0                 # Code formatting
+ruff>=0.1.0                   # Fast Python linter
+mypy>=1.7.0                   # Type checking
+types-pyyaml>=6.0.0           # Type stubs for PyYAML
+
+# Build and packaging
+build>=1.0.0                  # Build frontend
+setuptools>=68.0.0            # Package setup
+wheel>=0.41.0                 # Wheel distribution

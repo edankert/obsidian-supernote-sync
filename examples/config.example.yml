@@ -1,0 +1,109 @@
+# Obsidian-Supernote Sync Configuration Example
+# Copy this file to config.yml and customize for your setup
+
+# Device Settings
+supernote:
+  # Sync method: 'usb', 'cloud', or 'self-hosted'
+  sync_method: usb
+
+  # USB mount point (auto-detect if not specified)
+  mount_point: auto  # or specify like "E:/" on Windows
+
+  # Folders to sync from Supernote
+  folders_to_sync:
+    - "/Note/Daily"
+    - "/Note/Projects"
+
+  # Exclude patterns
+  exclude_patterns:
+    - "*.tmp"
+    - "/Note/Private/*"
+
+# Obsidian Settings
+obsidian:
+  # Path to your Obsidian vault
+  vault_path: "C:/Users/Edwin/Documents/ObsidianVault"
+
+  # Folder mapping: Supernote folder -> Obsidian folder
+  sync_destinations:
+    "/Note/Daily": "02 Journal/Daily Notes"
+    "/Note/Projects": "03 Projects"
+
+  # Auto-create missing folders
+  create_folders: true
+
+# Intermediate Storage
+intermediate:
+  # Where to store conversion files and sync state
+  location: "C:/Users/Edwin/Documents/ObsidianSupernoteSync"
+
+  # Keep original .note files as backup
+  keep_raw_files: true
+
+  # How long to keep backups (days)
+  backup_days: 30
+
+# Sync Behavior
+sync:
+  # Sync direction: 'bidirectional', 'to_obsidian', 'to_supernote'
+  direction: bidirectional
+
+  # Automatically sync when device is connected
+  auto_sync: false
+
+  # Conflict resolution: 'manual', 'timestamp_wins', 'device_priority'
+  conflict_resolution: manual
+
+  # Sync deletions between devices
+  delete_sync: false
+
+# Conversion Settings
+conversion:
+  # OCR provider: 'gemini', 'azure', 'tesseract', 'none'
+  ocr_provider: tesseract
+
+  # OCR language code
+  ocr_language: en
+
+  # Image format for handwriting: 'png' or 'jpg'
+  image_format: png
+
+  # Image DPI for exports
+  image_dpi: 300
+
+  # PDF page size for markdown conversion
+  pdf_page_size: A4
+
+  # Preserve markdown formatting in PDF
+  preserve_formatting: true
+
+# Metadata
+metadata:
+  # Add sync info to YAML frontmatter
+  add_sync_frontmatter: true
+
+  # Embed images inline in markdown
+  embed_images_inline: true
+
+  # Track OCR confidence scores
+  track_ocr_confidence: true
+
+# Cloud Settings (if using cloud sync)
+cloud:
+  # Supernote Cloud credentials (use environment variables!)
+  email: "${SUPERNOTE_EMAIL}"
+  password: "${SUPERNOTE_PASSWORD}"
+
+  # API endpoint (usually don't need to change)
+  api_url: "https://cloud.supernote.com"
+
+# Logging
+logging:
+  # Log level: 'DEBUG', 'INFO', 'WARNING', 'ERROR'
+  level: INFO
+
+  # Log file location
+  log_file: "sync.log"
+
+  # Console output verbosity
+  console_verbose: true

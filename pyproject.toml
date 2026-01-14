@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel>=0.41.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obsidian-supernote-sync"
+version = "0.1.0-alpha"
+description = "Bi-directional sync between Obsidian vault and Supernote device"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Edwin", email = "edwin@example.com"}
+]
+keywords = ["obsidian", "supernote", "sync", "e-ink", "note-taking"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "supernotelib>=0.6.4",
+    "Pillow>=10.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "weasyprint>=60.0",
+    "markdown>=3.5.0",
+    "rich>=13.0.0",
+    "click>=8.1.0",
+    "watchdog>=3.0.0",
+    "httpx>=0.25.0",
+    "aiofiles>=23.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "types-pyyaml>=6.0.0",
+]
+ocr-gemini = [
+    "google-generativeai>=0.3.0",
+]
+ocr-azure = [
+    "azure-cognitiveservices-vision>=0.9.0",
+]
+ocr-tesseract = [
+    "pytesseract>=0.3.10",
+]
+
+[project.scripts]
+obsidian-supernote = "obsidian_supernote.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/username/obsidian-supernote-sync"
+Repository = "https://github.com/username/obsidian-supernote-sync"
+Issues = "https://github.com/username/obsidian-supernote-sync/issues"
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=obsidian_supernote --cov-report=html --cov-report=term"
