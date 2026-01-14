@@ -20,7 +20,7 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 ### Prerequisites
 
 - Python 3.10 or higher
-- Pandoc (for markdown to PDF conversion)
+- **Pandoc** (for markdown to PDF conversion) - [Installation Guide](docs/PANDOC_SETUP.md)
 - Supernote device (A5X, A6X, or Nomad)
 
 ### Installation

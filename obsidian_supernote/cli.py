@@ -9,8 +9,13 @@ from rich.tree import Tree
 from rich import print as rprint
 
 from obsidian_supernote import __version__
-from obsidian_supernote.converters.markdown_to_pdf import MarkdownToPdfConverter
+from obsidian_supernote.converters.pandoc_converter import PandocConverter
+from obsidian_supernote.converters import WEASYPRINT_AVAILABLE
 from obsidian_supernote.parsers.note_parser import NoteFileParser
+
+# Conditionally import WeasyPrint converter
+if WEASYPRINT_AVAILABLE:
+    from obsidian_supernote.converters.markdown_to_pdf import MarkdownToPdfConverter
 
 console = Console()
 
@@ -29,10 +34,23 @@ def main() -> None:
 @click.argument("input_file", type=click.Path(exists=True))
 @click.argument("output_file", type=click.Path())
 @click.option("--page-size", default="A5", help="PDF page size (A4, A5, A6, Letter)")
-@click.option("--dpi", default=300, help="Image DPI for quality")
+@click.option("--margin", default="2cm", help="Page margins (e.g., 2cm, 1in)")
+@click.option("--font-size", default=11, help="Base font size in points")
+@click.option("--engine", type=click.Choice(["pandoc", "weasyprint"], case_sensitive=False), default="pandoc", help="PDF conversion engine")
 @click.option("--css", type=click.Path(exists=True), help="Custom CSS file for styling")
-def md_to_pdf(input_file: str, output_file: str, page_size: str, dpi: int, css: str | None) -> None:
+def md_to_pdf(
+    input_file: str,
+    output_file: str,
+    page_size: str,
+    margin: str,
+    font_size: int,
+    engine: str,
+    css: str | None,
+) -> None:
     """Convert Markdown file to PDF for Supernote.
+
+    By default uses Pandoc (recommended - easier to install).
+    Can also use WeasyPrint with --engine weasyprint (requires GTK+).
 
     Arguments:
         INPUT_FILE: Path to markdown file
@@ -44,15 +62,35 @@ def md_to_pdf(input_file: str, output_file: str, page_size: str, dpi: int, css: 
         css_path = Path(css) if css else None
 
         console.print(f"[bold blue]Converting Markdown → PDF[/bold blue]")
-        console.print(f"  Input:  {input_path}")
-        console.print(f"  Output: {output_path}")
-        console.print(f"  Page:   {page_size}, DPI: {dpi}")
+        console.print(f"  Input:    {input_path}")
+        console.print(f"  Output:   {output_path}")
+        console.print(f"  Page:     {page_size}")
+        console.print(f"  Margin:   {margin}")
+        console.print(f"  Font:     {font_size}pt")
+        console.print(f"  Engine:   {engine}")
 
-        # Create converter and convert
-        converter = MarkdownToPdfConverter(page_size=page_size, dpi=dpi)
+        # Choose conversion engine
+        if engine == "pandoc":
+            converter = PandocConverter(
+                page_size=page_size,
+                margin=margin,
+                font_size=font_size,
+            )
+            with console.status("[bold green]Converting with Pandoc...", spinner="dots"):
+                converter.convert(input_path, output_path, css_file=css_path)
 
-        with console.status("[bold green]Converting...", spinner="dots"):
-            converter.convert(input_path, output_path, css_path)
+        elif engine == "weasyprint":
+            if not WEASYPRINT_AVAILABLE:
+                console.print("[bold red]✗ Error:[/bold red] WeasyPrint is not available.")
+                console.print("  WeasyPrint requires GTK+ libraries on Windows.")
+                console.print("  See docs/WEASYPRINT_SETUP.md for installation.")
+                console.print("\n  [cyan]Tip:[/cyan] Use --engine pandoc instead (default)")
+                raise click.Abort()
+
+            # Use DPI for WeasyPrint (Pandoc doesn't use DPI)
+            converter = MarkdownToPdfConverter(page_size=page_size, dpi=300)
+            with console.status("[bold green]Converting with WeasyPrint...", spinner="dots"):
+                converter.convert(input_path, output_path, css_path)
 
         # Get file size
         size_kb = output_path.stat().st_size / 1024
@@ -61,6 +99,15 @@ def md_to_pdf(input_file: str, output_file: str, page_size: str, dpi: int, css: 
         console.print(f"  Generated: {output_path}")
         console.print(f"  Size: {size_kb:.1f} KB")
 
+    except RuntimeError as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {e}")
+        if "Pandoc is not installed" in str(e):
+            console.print("\n[cyan]Installation:[/cyan]")
+            console.print("  Windows: choco install pandoc")
+            console.print("  Mac:     brew install pandoc")
+            console.print("  Linux:   apt install pandoc")
+            console.print("  Or:      https://pandoc.org/installing.html")
+        raise click.Abort()
     except Exception as e:
         console.print(f"[bold red]✗ Error:[/bold red] {e}")
         raise click.Abort()
