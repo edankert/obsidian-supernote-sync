@@ -13,25 +13,20 @@ from pathlib import Path
 # Expected golden source files
 EXPECTED_FILES = {
     "png_template": [
-        "01_standard_png_blank.note",
-        "02_standard_png_written.note",
-        "03_realtime_png_blank.note",
-        "04_realtime_png_written.note",
+        "standard_png_blank.note",
+        "standard_png_written.note",
+        "realtime_png_blank.note",
+        "realtime_png_written.note",
     ],
     "pdf_template": [
-        "05_standard_pdf_blank.note",
-        "06_standard_pdf_written.note",
-        "07_realtime_pdf_blank.note",
-        "08_realtime_pdf_written.note",
-    ],
-    "no_template": [
-        "09_standard_none_blank.note",
-        "10_standard_none_written.note",
-        "11_realtime_none_written.note",
+        "standard_pdf_blank.note",
+        "standard_pdf_written.note",
+        "realtime_pdf_blank.note",
+        "realtime_pdf_written.note",
     ],
     "edge_cases": [
-        "12_standard_multipage.note",
-        "13_standard_multilayer.note",
+        "standard_multipage.note",
+        "standard_multilayer.note",
     ],
 }
 

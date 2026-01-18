@@ -20,8 +20,7 @@ examples/
 │   ├── README.md                # Detailed documentation
 │   ├── png_template/            # PNG-based notes (01-04)
 │   ├── pdf_template/            # PDF-based notes (05-08)
-│   ├── no_template/             # Notes without template (09-11)
-│   └── edge_cases/              # Multi-page, multi-layer (12-13)
+│   └── edge_cases/              # Multi-page, multi-layer (09-10)
 │
 ├── generated/                   # Output from note_writer.py
 │
@@ -148,10 +147,9 @@ See `config.example.yml` for configuration options including:
 | 06 | standard_pdf_written | PDF | Standard | PDF stroke storage |
 | 07 | realtime_pdf_blank | PDF | Real-time | Baseline PDF+Real-time |
 | 08 | realtime_pdf_written | PDF | Real-time | PDF recognition |
-| 09 | standard_none_blank | None | Standard | No template baseline |
-| 10 | standard_none_written | None | Standard | Basic strokes |
-| 11 | realtime_none_written | None | Real-time | Basic recognition |
-| 12 | standard_multipage | None | Standard | Page structure |
-| 13 | standard_multilayer | None | Standard | Layer structure |
+| 09 | standard_multipage | PNG | Standard | Page structure |
+| 10 | standard_multilayer | PNG | Standard | Layer structure |
+
+**Note:** Supernote requires a template for all notes - there is no "no template" option.
 
 See `golden_sources/README.md` for detailed creation instructions.

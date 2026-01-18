@@ -24,11 +24,12 @@ The Supernote supports two note creation modes:
 - Uses MyScript iink technology
 
 ### Template Types
-- **No Template**: Blank white background
 - **PNG Template**: Single-page custom background image (device-specific resolution)
   - A5X2 (Manta): 1920 x 2560 pixels
   - A5X/A6X: 1404 x 1872 pixels
 - **PDF Template**: Multi-page document, each page becomes a template
+
+**Note:** Supernote requires a template for all notes - there is no "no template" option.
 
 ## Test Matrix
 
@@ -42,11 +43,8 @@ The Supernote supports two note creation modes:
 | 06 | `standard_pdf_written.note` | PDF | Standard | Handwriting | Compare with PNG version |
 | 07 | `realtime_pdf_blank.note` | PDF | Real-time | Empty | Baseline for PDF+Real-time |
 | 08 | `realtime_pdf_written.note` | PDF | Real-time | Handwriting | Recognition + PDF combo |
-| 09 | `standard_none_blank.note` | None | Standard | Empty | No template baseline |
-| 10 | `standard_none_written.note` | None | Standard | Handwriting | Strokes without template |
-| 11 | `realtime_none_written.note` | None | Real-time | Handwriting | Recognition without template |
-| 12 | `standard_multipage.note` | None | Standard | Multi-page | Page addressing structure |
-| 13 | `standard_multilayer.note` | None | Standard | Multi-layer | Layer structure when used |
+| 09 | `standard_multipage.note` | PNG | Standard | Multi-page | Page addressing structure |
+| 10 | `standard_multilayer.note` | PNG | Standard | Multi-layer | Layer structure when used |
 
 ## Key Research Questions
 
@@ -79,28 +77,22 @@ golden_sources/
 ├── README.md                    # This file
 │
 ├── png_template/                # PNG-based notes
-│   ├── 01_standard_png_blank.note
-│   ├── 02_standard_png_written.note
-│   ├── 03_realtime_png_blank.note
-│   ├── 04_realtime_png_written.note
+│   ├── standard_png_blank.note
+│   ├── standard_png_written.note
+│   ├── realtime_png_blank.note
+│   ├── realtime_png_written.note
 │   └── analysis.md              # Findings from comparison
 │
 ├── pdf_template/                # PDF-based notes
-│   ├── 05_standard_pdf_blank.note
-│   ├── 06_standard_pdf_written.note
-│   ├── 07_realtime_pdf_blank.note
-│   ├── 08_realtime_pdf_written.note
-│   └── analysis.md
-│
-├── no_template/                 # Notes without template
-│   ├── 09_standard_none_blank.note
-│   ├── 10_standard_none_written.note
-│   ├── 11_realtime_none_written.note
+│   ├── standard_pdf_blank.note
+│   ├── standard_pdf_written.note
+│   ├── realtime_pdf_blank.note
+│   ├── realtime_pdf_written.note
 │   └── analysis.md
 │
 └── edge_cases/                  # Additional test cases
-    ├── 12_standard_multipage.note
-    ├── 13_standard_multilayer.note
+    ├── standard_multipage.note
+    ├── standard_multilayer.note
     └── analysis.md
 ```
 
@@ -126,7 +118,7 @@ golden_sources/
 8. Sync via Supernote Partner app
 
 #### PDF Template Notes (05-08)
-1. Create new note with any template (or no template)
+1. Create new note with PNG template
 2. Go to note settings → "Change Template"
 3. Select `sample_document.pdf` from Documents
 4. This converts the note to use PDF pages as templates
@@ -134,16 +126,9 @@ golden_sources/
 6. For "written" variants: Write on first page
 7. Save and sync
 
-#### No Template Notes (09-11)
-1. Create new note without selecting any template
-2. Use default white background
-3. Set Standard or Real-time mode
-4. Write content as specified
-5. Save and sync
-
-#### Edge Cases (12-13)
-1. **Multipage**: Create note, add 3+ pages manually
-2. **Multilayer**: Create note, use Layer menu to draw on LAYER1 and LAYER2
+#### Edge Cases (09-10)
+1. **Multipage**: Create note with PNG template, add 3+ pages manually
+2. **Multilayer**: Create note with PNG template, use Layer menu to draw on LAYER1 and LAYER2
 
 ### After Syncing
 1. Copy .note files from Supernote Partner sync folder:
@@ -181,12 +166,11 @@ Based on initial research, we expect to find:
 
 ## Status
 
-- [ ] Templates created and copied to device
-- [ ] PNG template notes created (01-04)
-- [ ] PDF template notes created (05-08)
-- [ ] No template notes created (09-11)
-- [ ] Edge case notes created (12-13)
-- [ ] All files synced and copied to golden_sources/
+- [x] Templates created and copied to device
+- [x] PNG template notes created (01-04)
+- [x] PDF template notes created (05-08)
+- [x] Edge case notes created (09-10)
+- [x] All files synced and copied to golden_sources/
 - [ ] Analysis complete
 
 ## References
