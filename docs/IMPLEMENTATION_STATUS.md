@@ -219,11 +219,11 @@ obsidian-supernote-sync/
 
 ```bash
 # Activate virtual environment
-cd C:\Edwin\OneDrive\dev\repos\obsidian-supernote-sync
+cd C:\Edwin\repos\obsidian-supernote-sync
 venv\Scripts\activate
 
 # Convert a note
-obsidian-supernote md-to-pdf "C:\Edwin\OneDrive\Notes Vault\Daily Notes\2026-01-14.md" output.pdf
+obsidian-supernote md-to-pdf "C:\Edwin\Notes Vault\Daily Notes\2026-01-14.md" output.pdf
 
 # With A6 page size for smaller Supernote
 obsidian-supernote md-to-pdf meeting.md meeting.pdf --page-size A6

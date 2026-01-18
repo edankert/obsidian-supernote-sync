@@ -187,7 +187,7 @@ All devices use format version `20230015` (2023 format).
 
 ```bash
 # Activate environment
-cd C:\Edwin\OneDrive\dev\repos\obsidian-supernote-sync
+cd C:\Edwin\repos\obsidian-supernote-sync
 venv\Scripts\activate
 
 # Inspect a .note file

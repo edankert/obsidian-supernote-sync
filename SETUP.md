@@ -6,7 +6,7 @@ This document describes how the development environment was set up for the Obsid
 
 - **Python Version:** 3.11.9
 - **Operating System:** Windows
-- **Project Location:** `C:\Edwin\OneDrive\dev\repos\obsidian-supernote-sync`
+- **Project Location:** `C:\Edwin\repos\obsidian-supernote-sync`
 - **Virtual Environment:** `venv/`
 
 ## Initial Setup
