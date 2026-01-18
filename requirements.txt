@@ -12,8 +12,11 @@ google-generativeai>=0.3.0    # Google Gemini API for OCR
 # Markdown to PDF conversion
 # Note: Pandoc must be installed separately (not a Python package)
 # Alternative Python options:
-weasyprint>=60.0              # Python-native PDF generation
+weasyprint>=60.0              # Python-native PDF generation (requires GTK+ on Windows)
 markdown>=3.5.0               # Markdown parsing
+
+# PDF processing and .note file creation
+pymupdf>=1.24.0               # PDF to PNG conversion (for pdf-to-note)
 
 # CLI and UI
 rich>=13.0.0                  # Beautiful terminal output

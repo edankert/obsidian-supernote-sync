@@ -20,12 +20,12 @@ class PandocConverter:
         Or download from: https://pandoc.org/installing.html
     """
 
-    # Page sizes for PDF generation
+    # Page sizes for PDF generation (LaTeX geometry package format)
     PAGE_SIZES = {
-        "A4": "a4",
-        "A5": "a5",
-        "A6": "a6",
-        "Letter": "letter",
+        "A4": "a4paper",
+        "A5": "a5paper",
+        "A6": "a6paper",
+        "Letter": "letterpaper",
     }
 
     def __init__(
@@ -48,14 +48,34 @@ class PandocConverter:
 
     def _check_pandoc(self) -> None:
         """Check if Pandoc is available."""
-        if not shutil.which("pandoc"):
-            raise RuntimeError(
-                "Pandoc is not installed or not in PATH.\n"
-                "Install from: https://pandoc.org/installing.html\n"
-                "Windows: choco install pandoc\n"
-                "Mac: brew install pandoc\n"
-                "Linux: apt install pandoc"
-            )
+        pandoc_path = shutil.which("pandoc")
+
+        # If not in PATH, check common Windows installation locations
+        if not pandoc_path:
+            from pathlib import Path
+            common_paths = [
+                Path("C:/Program Files/Pandoc/pandoc.exe"),
+                Path("C:/Program Files (x86)/Pandoc/pandoc.exe"),
+                Path.home() / "AppData/Local/Pandoc/pandoc.exe",
+            ]
+
+            for path in common_paths:
+                if path.exists():
+                    # Found Pandoc, use full path
+                    self._pandoc_exe = str(path)
+                    return
+        else:
+            self._pandoc_exe = "pandoc"
+            return
+
+        # Not found anywhere
+        raise RuntimeError(
+            "Pandoc is not installed or not in PATH.\n"
+            "Install from: https://pandoc.org/installing.html\n"
+            "Windows: choco install pandoc\n"
+            "Mac: brew install pandoc\n"
+            "Linux: apt install pandoc"
+        )
 
     def get_pandoc_version(self) -> str:
         """Get the installed Pandoc version.
@@ -64,7 +84,7 @@ class PandocConverter:
             Version string (e.g., "3.1.11")
         """
         result = subprocess.run(
-            ["pandoc", "--version"],
+            [self._pandoc_exe, "--version"],
             capture_output=True,
             text=True,
             check=True,
@@ -90,8 +110,8 @@ class PandocConverter:
             css_file: Optional CSS file for styling (via --css)
             template_file: Optional Pandoc template file
         """
-        markdown_file = Path(markdown_file)
-        output_pdf = Path(output_pdf)
+        markdown_file = Path(markdown_file).resolve()  # Use absolute path
+        output_pdf = Path(output_pdf).resolve()  # Use absolute path
 
         # Build Pandoc command
         cmd = self._build_command(
@@ -134,15 +154,14 @@ class PandocConverter:
             Command as list of strings
         """
         cmd = [
-            "pandoc",
+            self._pandoc_exe,
             str(markdown_file),
             "-o", str(output_pdf),
             "--from", "markdown+yaml_metadata_block+wikilinks_title_after_pipe",
-            "--pdf-engine", "pdflatex",  # or xelatex for better Unicode support
-            "-V", f"geometry:papersize={{{self.PAGE_SIZES.get(self.page_size, 'a5')}}}",
+            "--pdf-engine", "xelatex",  # xelatex for better Unicode support
+            "-V", f"geometry:{self.PAGE_SIZES.get(self.page_size, 'a5paper')}",
             "-V", f"geometry:margin={self.margin}",
-            "-V", f"fontsize={self.font_size}pt",
-            "--highlight-style", "tango",  # Syntax highlighting for code blocks
+            "-V", f"fontsize:{self.font_size}pt",
             "--table-of-contents",  # Add TOC
             "--toc-depth", "3",
             "--number-sections",  # Number headings
@@ -185,7 +204,7 @@ class PandocConverter:
         output_pdf = Path(output_pdf)
 
         cmd = [
-            "pandoc",
+            self._pandoc_exe,
             str(markdown_file),
             "-o", str(output_pdf),
         ]

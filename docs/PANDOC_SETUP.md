@@ -15,7 +15,9 @@ WeasyPrint is still available as an alternative (use `--engine weasyprint`), but
 
 ## Installation
 
-### Windows
+### Step 1: Install Pandoc
+
+#### Windows
 
 **Option 1: Using Chocolatey (Recommended)**
 ```powershell
@@ -31,6 +33,30 @@ scoop install pandoc
 1. Download the installer from: https://pandoc.org/installing.html
 2. Run the installer (`.msi` file)
 3. Pandoc will be added to PATH automatically
+
+### Step 2: Install PDF Engine (REQUIRED)
+
+**Pandoc needs a PDF engine to generate PDFs.** MiKTeX is recommended for high-quality output.
+
+#### Windows - Install MiKTeX
+
+**Option 1: Using Chocolatey (Easiest)**
+```powershell
+choco install miktex
+```
+
+**Option 2: Manual Install**
+1. Download from: https://miktex.org/download
+2. Run the installer (Basic MiKTeX ~200MB)
+3. During installation, select "Install missing packages on-the-fly: Yes"
+4. **Important:** Restart your terminal after installation
+
+**Verify MiKTeX installation:**
+```powershell
+pdflatex --version
+```
+
+You should see MiKTeX version information.
 
 ### macOS
 

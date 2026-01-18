@@ -131,8 +131,20 @@ class NoteFileParser:
         # ZIP files start with "PK\x03\x04"
         zip_signature = b"PK\x03\x04"
 
-        # Find the last occurrence (ZIP is at the end)
-        zip_start = self.file_data.rfind(zip_signature)
+        # The ZIP archive comes after all PNG images
+        # Find the last PNG end marker first
+        png_end_marker = b"IEND\xaeB`\x82"
+        last_png_end = self.file_data.rfind(png_end_marker)
+
+        if last_png_end == -1:
+            # No PNGs found, search from beginning
+            search_start = 0
+        else:
+            # Search for ZIP after the last PNG
+            search_start = last_png_end + 8  # Include the IEND marker (8 bytes)
+
+        # Find the FIRST ZIP signature after all PNGs
+        zip_start = self.file_data.find(zip_signature, search_start)
 
         if zip_start == -1:
             # No ZIP archive found

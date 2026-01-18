@@ -10,6 +10,8 @@ from rich import print as rprint
 
 from obsidian_supernote import __version__
 from obsidian_supernote.converters.pandoc_converter import PandocConverter
+from obsidian_supernote.converters.note_writer import NoteFileWriter
+from obsidian_supernote.converters.note_to_obsidian import NoteToObsidianConverter
 from obsidian_supernote.converters import WEASYPRINT_AVAILABLE
 from obsidian_supernote.parsers.note_parser import NoteFileParser
 
@@ -61,7 +63,7 @@ def md_to_pdf(
         output_path = Path(output_file)
         css_path = Path(css) if css else None
 
-        console.print(f"[bold blue]Converting Markdown → PDF[/bold blue]")
+        console.print(f"[bold blue]Converting Markdown to PDF[/bold blue]")
         console.print(f"  Input:    {input_path}")
         console.print(f"  Output:   {output_path}")
         console.print(f"  Page:     {page_size}")
@@ -116,20 +118,141 @@ def md_to_pdf(
 @main.command()
 @click.argument("input_file", type=click.Path(exists=True))
 @click.argument("output_file", type=click.Path())
-@click.option("--ocr/--no-ocr", default=True, help="Enable OCR text extraction")
-@click.option("--images/--no-images", default=True, help="Extract page images")
-def note_to_md(input_file: str, output_file: str, ocr: bool, images: bool) -> None:
-    """Convert Supernote .note file to Markdown.
+@click.option("--device", default="A5X", help="Target Supernote device (A5X, A6X, Nomad, N5, N6)")
+@click.option("--language", default="en_GB", help="Recognition language (en_GB, en_US, etc.)")
+@click.option("--dpi", default=300, help="DPI for rendering PDF pages (higher = better quality)")
+def pdf_to_note(
+    input_file: str,
+    output_file: str,
+    device: str,
+    language: str,
+    dpi: int,
+) -> None:
+    """Convert PDF file to Supernote .note format.
+
+    Creates a .note file with the PDF pages embedded as background templates.
+    The note can be opened on Supernote for annotation and handwriting.
+
+    Arguments:
+        INPUT_FILE: Path to PDF file
+        OUTPUT_FILE: Path to output .note file
+    """
+    try:
+        input_path = Path(input_file)
+        output_path = Path(output_file)
+
+        # Ensure output has .note extension
+        if output_path.suffix.lower() != ".note":
+            output_path = output_path.with_suffix(".note")
+
+        console.print(f"[bold blue]Converting PDF to Supernote .note[/bold blue]")
+        console.print(f"  Input:    {input_path}")
+        console.print(f"  Output:   {output_path}")
+        console.print(f"  Device:   {device}")
+        console.print(f"  Language: {language}")
+        console.print(f"  DPI:      {dpi}")
+
+        writer = NoteFileWriter(device=device, language=language)
+
+        with console.status("[bold green]Converting PDF to .note...", spinner="dots"):
+            writer.convert_pdf_to_note(input_path, output_path, dpi=dpi)
+
+        # Get file size and page count
+        size_mb = output_path.stat().st_size / (1024 * 1024)
+
+        console.print(f"\n[bold green]SUCCESS![/bold green]")
+        console.print(f"  Generated: {output_path}")
+        console.print(f"  Size: {size_mb:.2f} MB")
+        console.print(f"\n[cyan]Next steps:[/cyan]")
+        console.print(f"  1. Copy the .note file to your Supernote's Note folder")
+        console.print(f"  2. Open in Supernote and add annotations!")
+
+    except Exception as e:
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
+        import traceback
+        console.print(traceback.format_exc())
+        raise click.Abort()
+
+
+@main.command()
+@click.argument("input_file", type=click.Path(exists=True))
+@click.argument("output_dir", type=click.Path())
+def note_to_png(input_file: str, output_dir: str) -> None:
+    """Convert Supernote .note file to PNG images.
+
+    Extracts all pages from the .note file as PNG images.
+
+    Arguments:
+        INPUT_FILE: Path to .note file
+        OUTPUT_DIR: Directory to save PNG images
+    """
+    try:
+        input_path = Path(input_file)
+        output_path = Path(output_dir)
+
+        console.print(f"[bold blue]Converting .note to PNG images[/bold blue]")
+        console.print(f"  Input:  {input_path}")
+        console.print(f"  Output: {output_path}")
+
+        converter = NoteToObsidianConverter(input_path)
+        console.print(f"  Pages:  {converter.page_count}")
+
+        with console.status("[bold green]Converting pages...", spinner="dots"):
+            png_files = converter.convert_all_pages_to_png(output_path)
+
+        console.print(f"\n[bold green]SUCCESS![/bold green]")
+        console.print(f"  Generated {len(png_files)} PNG files:")
+        for f in png_files:
+            console.print(f"    - {f.name}")
+
+    except Exception as e:
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
+        import traceback
+        console.print(traceback.format_exc())
+        raise click.Abort()
+
+
+@main.command()
+@click.argument("input_file", type=click.Path(exists=True))
+@click.argument("output_file", type=click.Path())
+@click.option("--image-dir", type=click.Path(), help="Directory for images (default: same as markdown)")
+@click.option("--embed/--no-embed", default=True, help="Use Obsidian image embeds (![[image]])")
+def note_to_md(input_file: str, output_file: str, image_dir: str | None, embed: bool) -> None:
+    """Convert Supernote .note file to Markdown with images.
+
+    Creates a Markdown file with YAML frontmatter and embedded images.
+    Images are saved as PNG files alongside the Markdown.
 
     Arguments:
         INPUT_FILE: Path to .note file
         OUTPUT_FILE: Path to output markdown file
     """
-    console.print(f"[bold green]Converting[/bold green] {input_file} -> {output_file}")
-    console.print(f"OCR: {ocr}, Extract images: {images}")
+    try:
+        input_path = Path(input_file)
+        output_path = Path(output_file)
+        img_dir = Path(image_dir) if image_dir else None
 
-    # TODO: Implement conversion
-    console.print("[yellow]Not yet implemented - Coming soon![/yellow]")
+        console.print(f"[bold blue]Converting .note to Markdown[/bold blue]")
+        console.print(f"  Input:     {input_path}")
+        console.print(f"  Output:    {output_path}")
+        console.print(f"  Image dir: {img_dir or output_path.parent}")
+        console.print(f"  Embed:     {'Obsidian (![[]])' if embed else 'Standard markdown'}")
+
+        converter = NoteToObsidianConverter(input_path)
+        console.print(f"  Pages:     {converter.page_count}")
+
+        with console.status("[bold green]Converting...", spinner="dots"):
+            md_path = converter.convert_to_markdown(output_path, img_dir, embed)
+
+        console.print(f"\n[bold green]SUCCESS![/bold green]")
+        console.print(f"  Markdown: {md_path}")
+        console.print(f"  Images:   {converter.page_count} PNG files")
+
+    except Exception as e:
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
+        import traceback
+        console.print(traceback.format_exc())
+        raise click.Abort()
 
 
 @main.command()
