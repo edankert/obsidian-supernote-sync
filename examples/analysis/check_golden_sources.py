@@ -109,7 +109,8 @@ def main():
     templates_dir = script_dir.parent / "templates"
 
     templates = [
-        ("blank_template.png", "PNG template for note creation"),
+        ("blank_template_a5x2.png", "PNG template for Manta (1920x2560)"),
+        ("blank_template_a5x.png", "PNG template for A5X (1404x1872)"),
         ("sample_document.pdf", "PDF template for multi-page notes"),
     ]
 

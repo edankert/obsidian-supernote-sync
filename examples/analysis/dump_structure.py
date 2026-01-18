@@ -150,6 +150,17 @@ def analyze_note_file(file_path: Path) -> dict[str, Any]:
     return result
 
 
+def get_device_info(equipment: str) -> str:
+    """Get device description from APPLY_EQUIPMENT value."""
+    device_info = {
+        "A5X2": "A5X2 (Manta) - 1920x2560 @ 300 DPI",
+        "A5X": "A5X - 1404x1872 @ 226 DPI",
+        "A6X2": "A6X2 (Nomad) - 1404x1872 @ 300 DPI",
+        "A6X": "A6X - 1404x1872 @ 300 DPI",
+    }
+    return device_info.get(equipment, f"{equipment} (unknown)")
+
+
 def format_output(result: dict[str, Any], as_json: bool = False) -> str:
     """Format the analysis result for output."""
     if as_json:
@@ -167,6 +178,10 @@ def format_output(result: dict[str, Any], as_json: bool = False) -> str:
     lines.append(f"  Filetype: {result['filetype']}")
     lines.append(f"  Signature: {result['signature']}")
     lines.append(f"  Footer address: {result['footer_address']}")
+
+    # Device info from header
+    equipment = result["header"]["tags"].get("APPLY_EQUIPMENT", "unknown")
+    lines.append(f"  Device: {get_device_info(equipment)}")
     lines.append("")
 
     # Header

@@ -25,7 +25,9 @@ The Supernote supports two note creation modes:
 
 ### Template Types
 - **No Template**: Blank white background
-- **PNG Template**: Single-page custom background image (1404x1872 pixels)
+- **PNG Template**: Single-page custom background image (device-specific resolution)
+  - A5X2 (Manta): 1920 x 2560 pixels
+  - A5X/A6X: 1404 x 1872 pixels
 - **PDF Template**: Multi-page document, each page becomes a template
 
 ## Test Matrix
@@ -67,7 +69,8 @@ The Supernote supports two note creation modes:
 
 ### 5. Template Handling
 - How does the device validate PNG dimensions?
-- What happens if PNG size doesn't match 1404x1872?
+- What happens if PNG size doesn't match device resolution?
+- Does A5X2 (1920x2560) use different format than A5X (1404x1872)?
 
 ## Directory Structure
 
@@ -104,8 +107,10 @@ golden_sources/
 ## How to Create Golden Sources
 
 ### Prerequisites
-1. Supernote device (A5X, A6X, Nomad, etc.)
-2. `blank_template.png` copied to device's `MyStyle/` folder
+1. Supernote device (A5X2/Manta, A5X, A6X2/Nomad, A6X)
+2. Appropriate `blank_template_*.png` copied to device's `MyStyle/` folder:
+   - A5X2 (Manta): Use `blank_template_a5x2.png` (1920x2560)
+   - A5X/A6X: Use `blank_template_a5x.png` (1404x1872)
 3. `sample_document.pdf` copied to device's `Document/` folder
 
 ### Steps for Each Note

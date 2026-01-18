@@ -12,7 +12,8 @@ examples/
 │
 ├── templates/                   # Input templates for note creation
 │   ├── README.md
-│   ├── blank_template.png       # 1404x1872 white PNG for Supernote
+│   ├── blank_template_a5x2.png  # 1920x2560 white PNG for Manta
+│   ├── blank_template_a5x.png   # 1404x1872 white PNG for A5X
 │   └── sample_document.pdf      # 2-page PDF for testing
 │
 ├── golden_sources/              # Reference .note files from device
@@ -103,14 +104,28 @@ python examples/analysis/dump_structure.py input.note
 
 ## Templates
 
-### blank_template.png
+### blank_template_a5x2.png (Manta)
+- **Dimensions:** 1920 x 2560 pixels (A5X2/Manta native resolution)
+- **Format:** PNG, RGB, white background
+- **Usage:** Copy to Supernote's `MyStyle/` folder for Manta devices
+
+### blank_template_a5x.png (A5X)
 - **Dimensions:** 1404 x 1872 pixels (A5X native resolution)
 - **Format:** PNG, RGB, white background
-- **Usage:** Copy to Supernote's `MyStyle/` folder to use as custom template
+- **Usage:** Copy to Supernote's `MyStyle/` folder for A5X devices
 
 ### sample_document.pdf
 - **Pages:** 2
 - **Usage:** Copy to Supernote's `Document/` folder to use as PDF template
+
+## Supported Devices
+
+| Device | Model | Resolution | DPI |
+|--------|-------|------------|-----|
+| A5X2 | Manta | 1920 x 2560 | 300 |
+| A5X | - | 1404 x 1872 | 226 |
+| A6X2 | Nomad | 1404 x 1872 | 300 |
+| A6X | - | 1404 x 1872 | 300 |
 
 ## Configuration
 

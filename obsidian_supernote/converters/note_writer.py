@@ -27,11 +27,23 @@ class NoteFileWriter:
     6. Page metadata blocks (4-byte length + tags)
     7. Footer block (4-byte length + tags + "tail")
     8. Footer address (4 bytes, little-endian)
+
+    Supported devices and resolutions:
+    - A5X: 1404 x 1872 pixels (226 DPI)
+    - A5X2 (Manta): 1920 x 2560 pixels (300 DPI)
+    - A6X: 1404 x 1872 pixels (300 DPI)
+    - A6X2 (Nomad): 1404 x 1872 pixels (300 DPI)
     """
 
-    # Supernote display dimensions for templates
-    TEMPLATE_WIDTH = 1404  # A5X native width
-    TEMPLATE_HEIGHT = 1872  # A5X native height
+    # Device resolution mapping: (width, height, dpi)
+    DEVICE_SPECS = {
+        "A5X": (1404, 1872, 226),
+        "A5X2": (1920, 2560, 300),  # Manta
+        "Manta": (1920, 2560, 300),  # Alias for A5X2
+        "A6X": (1404, 1872, 300),
+        "A6X2": (1404, 1872, 300),  # Nomad
+        "Nomad": (1404, 1872, 300),  # Alias for A6X2
+    }
 
     # File format constants
     FILETYPE = b"note"
@@ -44,36 +56,46 @@ class NoteFileWriter:
 
     def __init__(
         self,
-        device: str = "A5X",
+        device: str = "A5X2",
         language: str = "en_GB",
     ):
         """Initialize the note writer.
 
         Args:
-            device: Target Supernote device (A5X, A6X, Nomad, N5, N6)
+            device: Target Supernote device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
             language: Recognition language (en_GB, en_US, etc.)
         """
         self.device = device
         self.language = language
 
+        # Set device-specific dimensions
+        if device in self.DEVICE_SPECS:
+            self.template_width, self.template_height, self.native_dpi = self.DEVICE_SPECS[device]
+        else:
+            # Default to A5X2 (Manta) for unknown devices
+            self.template_width, self.template_height, self.native_dpi = self.DEVICE_SPECS["A5X2"]
+
     def convert_pdf_to_note(
         self,
         pdf_path: Path,
         output_path: Path,
-        dpi: int = 226,  # Native DPI for Supernote A5X
+        dpi: int | None = None,
     ) -> None:
         """Convert a PDF file to a Supernote .note file.
 
         Args:
             pdf_path: Path to input PDF file
             output_path: Path to output .note file
-            dpi: DPI for rendering PDF pages
+            dpi: DPI for rendering PDF pages (defaults to device native DPI)
         """
         pdf_path = Path(pdf_path)
         output_path = Path(output_path)
 
+        # Use device native DPI if not specified
+        render_dpi = dpi if dpi is not None else self.native_dpi
+
         # Read PDF and convert pages to PNG
-        png_pages = self._convert_pdf_to_pngs(pdf_path, dpi)
+        png_pages = self._convert_pdf_to_pngs(pdf_path, render_dpi)
 
         # Calculate PDF hash and size
         pdf_data = pdf_path.read_bytes()
@@ -113,9 +135,9 @@ class NoteFileWriter:
         for img_path in image_paths:
             img = Image.open(img_path)
             # Resize to Supernote dimensions if needed
-            if img.size != (self.TEMPLATE_WIDTH, self.TEMPLATE_HEIGHT):
+            if img.size != (self.template_width, self.template_height):
                 img = img.resize(
-                    (self.TEMPLATE_WIDTH, self.TEMPLATE_HEIGHT),
+                    (self.template_width, self.template_height),
                     Image.Resampling.LANCZOS,
                 )
             # Convert to PNG bytes
@@ -141,17 +163,18 @@ class NoteFileWriter:
     def _convert_pdf_to_pngs(
         self,
         pdf_path: Path,
-        dpi: int = 226,
+        dpi: int | None = None,
     ) -> List[bytes]:
         """Convert PDF pages to PNG images.
 
         Args:
             pdf_path: Path to PDF file
-            dpi: DPI for rendering
+            dpi: DPI for rendering (defaults to device native DPI)
 
         Returns:
             List of PNG image data as bytes
         """
+        render_dpi = dpi if dpi is not None else self.native_dpi
         png_pages = []
 
         # Open PDF with PyMuPDF
@@ -161,7 +184,7 @@ class NoteFileWriter:
             page = doc[page_num]
 
             # Calculate zoom factor for target DPI
-            zoom = dpi / 72.0  # PDF is 72 DPI by default
+            zoom = render_dpi / 72.0  # PDF is 72 DPI by default
             mat = fitz.Matrix(zoom, zoom)
 
             # Render page to pixmap
@@ -172,7 +195,7 @@ class NoteFileWriter:
 
             # Resize to Supernote dimensions
             img = img.resize(
-                (self.TEMPLATE_WIDTH, self.TEMPLATE_HEIGHT),
+                (self.template_width, self.template_height),
                 Image.Resampling.LANCZOS,
             )
 
@@ -340,14 +363,16 @@ class NoteFileWriter:
         Returns:
             Header content string
         """
+        # Map device names to APPLY_EQUIPMENT values
         device_map = {
             "A5X": "A5X",
+            "A5X2": "A5X2",  # Manta
+            "Manta": "A5X2",
             "A6X": "A6X",
+            "A6X2": "A6X2",  # Nomad
             "Nomad": "A6X2",
-            "N5": "N5",
-            "N6": "N6",
         }
-        equipment = device_map.get(self.device, "A5X")
+        equipment = device_map.get(self.device, "A5X2")
 
         tags = [
             f"<MODULE_LABEL:SNFILE_FEATURE>",
@@ -527,7 +552,7 @@ class NoteFileWriter:
 def convert_pdf_to_note(
     pdf_path: str | Path,
     output_path: str | Path,
-    device: str = "A5X",
+    device: str = "A5X2",
     language: str = "en_GB",
 ) -> None:
     """Convert PDF to .note file.
@@ -535,7 +560,7 @@ def convert_pdf_to_note(
     Args:
         pdf_path: Path to input PDF
         output_path: Path to output .note file
-        device: Target device
+        device: Target device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
         language: Recognition language
     """
     writer = NoteFileWriter(device=device, language=language)
