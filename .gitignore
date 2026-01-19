@@ -69,3 +69,11 @@ Thumbs.db
 
 # Temporary files
 tmpclaude-*
+
+# Claude Code IDE
+.claude/
+
+# Generated and analysis outputs
+examples/analysis/extracted_golden/
+examples/analysis/generate_png_note.py
+examples/generated/
