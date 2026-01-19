@@ -105,13 +105,15 @@ mypy obsidian_supernote/
 ## Documentation
 
 For detailed documentation, see:
-- [Architecture Overview](docs/architecture.md)
-- [File Format Analysis](docs/note-format-analysis.md)
-- [API Reference](docs/api-reference.md)
+- [Project Roadmap](docs/ROADMAP.md) - Development phases and goals
+- [Implementation Status](docs/IMPLEMENTATION_STATUS.md) - Current feature status
+- [Pandoc Setup](docs/PANDOC_SETUP.md) - Installing Pandoc for PDF conversion
+- [Testing Notes](docs/TESTING_NOTES.md) - Testing documentation
 
 ## Related Projects
 
-- [supernote-lite](https://github.com/allenporter/supernote-lite) - Core library for .note parsing
+- [supernote-tool](https://github.com/jya-dev/supernote-tool) - Core library for .note parsing (supernotelib)
+- [supernote-lite](https://github.com/allenporter/supernote-lite) - Alternative lighter toolkit
 - [supernote-to-obsidian](https://github.com/heyScully/supernote-to-obsidian) - One-way sync inspiration
 
 ## License

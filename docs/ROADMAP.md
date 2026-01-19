@@ -1,7 +1,19 @@
 # Obsidian-Supernote Sync Roadmap
 
 **Last Updated:** 2026-01-19
-**Status:** Phase 1 Complete - Ready for Phase 2
+**Status:** Phase 3 In Progress - Core Converters Complete
+**PRD Location:** `C:\Edwin\Notes Vault\03 Projects\Obsidian-Supernote Sync\Obsidian-Supernote Sync Tool.md`
+
+## Phase Mapping
+
+| PRD Phase | Project Phase | Status |
+|-----------|---------------|--------|
+| Phase 1: Research & Discovery | - | ✅ Complete |
+| Phase 2: Decision & Planning | - | ✅ Complete |
+| Phase 2.5: .note Format Research | Phase 1: Fix .note Generation | ✅ Complete |
+| Phase 3: Prototype Development | Phase 2: Complete Conversion Pipeline | 🔄 In Progress |
+| Phase 4: Testing & Refinement | - | Upcoming |
+| Phase 5: Production & Enhancement | Phase 3: Automated Sync | Planned |
 
 ## End Goal
 
@@ -45,11 +57,11 @@ Bi-directional sync between Obsidian and Supernote:
 
 ## Phases
 
-### Phase 1: Fix .note Generation ✅ COMPLETE
+### PRD Phases 1-2.5: Research & .note Generation ✅ COMPLETE
 
-**Goal:** Generate .note files that the Supernote device accepts
+**Goal:** Understand .note format and generate files that the Supernote device accepts
 
-**Completed 2026-01-19** - Both PNG and PDF template converters working on device.
+**Completed 2026-01-19** - Full .note format reverse-engineered. PNG, PDF, and Markdown converters working on device.
 
 #### Key Discoveries
 
@@ -89,9 +101,9 @@ convert_markdown_to_note("document.md", "output.note", realtime=True)
 convert_markdown_to_note("document.md", "output.note", page_size="A5", margin="2cm", font_size=11)
 ```
 
-### Phase 2: Complete Conversion Pipeline
+### PRD Phase 3: Prototype Development (IN PROGRESS)
 
-**Goal:** Reliable end-to-end conversion in both directions
+**Goal:** Reliable end-to-end conversion in both directions + sync state tracking
 
 #### Step 2.1: Obsidian → Supernote Workflow
 
@@ -124,7 +136,7 @@ obsidian-supernote note-to-md "Handwritten.note" "Handwritten.md"
 - Add `--output-dir` for batch processing
 - Add progress indicators for large files
 
-### Phase 3: Automated Sync
+### PRD Phases 4-5: Testing, Refinement & Automated Sync (PLANNED)
 
 **Goal:** Automatic synchronization without manual commands
 

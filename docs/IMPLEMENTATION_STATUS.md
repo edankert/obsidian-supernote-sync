@@ -169,7 +169,17 @@ obsidian-supernote note-to-md input.note output.md [--image-dir images/] [--embe
 
 ## In Progress Features
 
-### 5. Sync Engine ⚠️ (Planned)
+### 5. OCR Text Extraction ⚠️ (Planned)
+
+**Status:** Not yet started
+
+**Planned Features:**
+- Extract handwritten text from .note files
+- Google Gemini API integration for AI-powered OCR
+- Tesseract as offline fallback option
+- Confidence scoring for OCR accuracy
+
+### 6. Sync Engine ⚠️ (Planned)
 
 **Status:** Not yet started
 
@@ -239,11 +249,13 @@ obsidian-supernote status
 obsidian-supernote-sync/
 ├── obsidian_supernote/
 │   ├── __init__.py                 ✅ Package initialization
-│   ├── cli.py                      🔄 CLI interface (2/6 commands)
+│   ├── cli.py                      ✅ CLI interface (5+ commands)
 │   ├── converters/
 │   │   ├── __init__.py             ✅ Converter exports
-│   │   ├── markdown_to_pdf.py      ✅ MD → PDF (implemented)
-│   │   └── note_to_markdown.py     ❌ .note → MD (not started)
+│   │   ├── markdown_to_pdf.py      ✅ MD → PDF (WeasyPrint)
+│   │   ├── pandoc_converter.py     ✅ MD → PDF (Pandoc) - RECOMMENDED
+│   │   ├── note_writer.py          ✅ PDF/PNG/MD → .note (device-tested!)
+│   │   └── note_to_obsidian.py     ✅ .note → MD/PNG (implemented)
 │   ├── parsers/
 │   │   ├── __init__.py             ✅ Parser exports
 │   │   └── note_parser.py          ✅ .note parser (implemented)
@@ -256,11 +268,14 @@ obsidian-supernote-sync/
 ├── tests/
 │   ├── test_basic.py               ✅ 2/2 passing
 │   ├── test_markdown_to_pdf.py     ⚠️ 0/7 (skip: needs GTK+)
-│   └── test_note_parser.py         ✅ 4/6 passing (2 skip: need .note files)
+│   ├── test_note_parser.py         ✅ 4/6 passing
+│   └── test_pandoc_converter.py    ✅ Pandoc tests
 └── docs/
     ├── IMPLEMENTATION_STATUS.md    ✅ This file
+    ├── ROADMAP.md                  ✅ Project roadmap
+    ├── PANDOC_SETUP.md             ✅ Pandoc installation guide
     ├── WEASYPRINT_SETUP.md         ✅ GTK+ setup guide
-    └── SETUP.md                    ✅ Dev environment guide
+    └── TESTING_NOTES.md            ✅ Testing documentation
 ```
 
 ## Usage Examples
@@ -372,15 +387,20 @@ pytest --cov
 
 ## Conclusion
 
-**Current Status:** Alpha development - Core parsing and conversion working
+**Current Status:** Alpha development - Core converters complete and device-tested
 
 **Ready to Use:**
 - ✅ .note file inspection
-- ⚠️ Markdown → PDF (needs GTK+ setup)
+- ✅ Markdown → PDF (via Pandoc - recommended)
+- ✅ Markdown → .note (via Pandoc pipeline)
+- ✅ PDF → .note (device-tested on Manta)
+- ✅ PNG → .note (device-tested on Manta)
+- ✅ .note → PNG extraction
+- ✅ .note → Markdown (images embedded, no OCR yet)
 
 **Not Ready:**
-- ❌ .note → Markdown conversion
-- ❌ Bi-directional sync
-- ❌ Automatic sync workflow
+- ❌ OCR text extraction from handwriting
+- ❌ Bi-directional automated sync
+- ❌ Automatic sync workflow with file watching
 
-**Recommendation:** Test implemented features with real files, then proceed with .note → Markdown converter and sync engine.
+**Recommendation:** Begin Phase 2 work on sync engine and OCR integration. Core conversion pipeline is complete.
