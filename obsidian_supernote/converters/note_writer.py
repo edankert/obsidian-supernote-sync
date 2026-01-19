@@ -6,6 +6,7 @@ import json
 import struct
 import random
 import string
+import tempfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -13,6 +14,8 @@ from typing import List, Tuple
 
 import fitz  # PyMuPDF
 from PIL import Image
+
+from obsidian_supernote.converters.pandoc_converter import PandocConverter
 
 
 class NoteFileWriter:
@@ -1023,3 +1026,59 @@ def convert_png_to_note(
     """
     writer = NoteFileWriter(device=device, language=language)
     writer.convert_png_template_to_note(Path(png_path), Path(output_path), template_name, realtime=realtime)
+
+
+def convert_markdown_to_note(
+    markdown_path: str | Path,
+    output_path: str | Path,
+    device: str = "A5X2",
+    language: str = "en_GB",
+    realtime: bool = False,
+    page_size: str = "A5",
+    margin: str = "2cm",
+    font_size: int = 11,
+) -> None:
+    """Convert Markdown file to .note file.
+
+    This converts a Markdown file to a Supernote .note file by first
+    converting to PDF using Pandoc, then converting the PDF to .note format.
+
+    Requires Pandoc to be installed:
+        Windows: choco install pandoc
+        Mac: brew install pandoc
+        Linux: apt install pandoc
+
+    Args:
+        markdown_path: Path to input Markdown file
+        output_path: Path to output .note file
+        device: Target device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
+        language: Recognition language (used when realtime=True)
+        realtime: Enable realtime handwriting recognition mode
+        page_size: PDF page size (A4, A5, A6, Letter)
+        margin: Page margins (e.g., "2cm", "1in")
+        font_size: Base font size in points
+    """
+    markdown_path = Path(markdown_path)
+    output_path = Path(output_path)
+
+    # Create temporary PDF file
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_pdf:
+        tmp_pdf_path = Path(tmp_pdf.name)
+
+    try:
+        # Convert Markdown to PDF using Pandoc
+        pandoc = PandocConverter(
+            page_size=page_size,
+            margin=margin,
+            font_size=font_size,
+        )
+        pandoc.convert(markdown_path, tmp_pdf_path)
+
+        # Convert PDF to .note
+        writer = NoteFileWriter(device=device, language=language)
+        writer.convert_pdf_to_note(tmp_pdf_path, output_path, realtime=realtime)
+
+    finally:
+        # Clean up temporary PDF file
+        if tmp_pdf_path.exists():
+            tmp_pdf_path.unlink()

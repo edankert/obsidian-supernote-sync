@@ -11,6 +11,7 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 
 ### Working ✅
 
+- **Markdown → .note**: Convert Obsidian markdown directly to Supernote .note files (via Pandoc)
 - **Markdown → PDF**: Convert Obsidian markdown to Supernote-optimized PDFs (via Pandoc)
 - **PDF → .note**: Convert PDFs to annotatable Supernote .note files (device-tested)
 - **PNG → .note**: Convert PNG templates to .note files (device-tested)

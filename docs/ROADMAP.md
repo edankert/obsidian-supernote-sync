@@ -36,6 +36,7 @@ Bi-directional sync between Obsidian and Supernote:
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Markdown → PDF | ✅ Working | Via Pandoc + MiKTeX |
+| Markdown → .note | ✅ Working | Via Pandoc → PDF → .note pipeline |
 | PDF → .note | ✅ Working | Device-tested, opens and allows writing |
 | PNG → .note | ✅ Working | Device-tested, opens and allows writing |
 | .note → PNG | ✅ Working | Via supernotelib |
@@ -74,6 +75,18 @@ convert_png_to_note("template.png", "output.note", device="A5X2")
 ```python
 from obsidian_supernote.converters.note_writer import convert_pdf_to_note
 convert_pdf_to_note("document.pdf", "output.note", device="A5X2")
+```
+
+**Markdown Converter:**
+```python
+from obsidian_supernote.converters.note_writer import convert_markdown_to_note
+convert_markdown_to_note("document.md", "output.note", device="A5X2")
+
+# With realtime handwriting recognition
+convert_markdown_to_note("document.md", "output.note", realtime=True)
+
+# With custom page settings
+convert_markdown_to_note("document.md", "output.note", page_size="A5", margin="2cm", font_size=11)
 ```
 
 ### Phase 2: Complete Conversion Pipeline

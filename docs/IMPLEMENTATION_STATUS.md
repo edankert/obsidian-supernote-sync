@@ -110,7 +110,44 @@ convert_png_to_note("my_template.png", "output.note", template_name="custom_name
 
 **Tests:** Device-tested on Supernote Manta (2026-01-19)
 
-### 4. .note → Markdown Converter ✅
+### 4. Markdown → .note Converter ✅ (Device Tested)
+
+**Module:** `obsidian_supernote/converters/note_writer.py`
+
+**Features:**
+- Converts Markdown files directly to Supernote `.note` format
+- Uses Pandoc for Markdown → PDF, then PDF → .note pipeline
+- Supports standard and realtime handwriting recognition modes
+- Customizable page size, margins, and font size
+
+**Python API:**
+```python
+from obsidian_supernote.converters import convert_markdown_to_note
+
+# Basic conversion
+convert_markdown_to_note("document.md", "document.note")
+
+# With realtime handwriting recognition
+convert_markdown_to_note("document.md", "document.note", realtime=True)
+
+# With custom page settings
+convert_markdown_to_note(
+    "document.md",
+    "document.note",
+    device="A5X2",
+    page_size="A5",
+    margin="2cm",
+    font_size=11,
+)
+```
+
+**Requirements:**
+- Pandoc must be installed (`choco install pandoc` on Windows)
+- LaTeX distribution for PDF generation (MiKTeX or TeX Live)
+
+**Tests:** Validated with supernotelib (2026-01-19)
+
+### 5. .note → Markdown Converter ✅
 
 **Module:** `obsidian_supernote/converters/note_to_obsidian.py`
 
