@@ -1,7 +1,7 @@
 # Implementation Status
 
-**Last Updated:** 2026-01-14
-**Version:** 0.1.0-alpha
+**Last Updated:** 2026-01-19
+**Version:** 0.2.0-alpha
 
 ## Completed Features
 
@@ -54,73 +54,85 @@ obsidian-supernote md-to-pdf report.md report.pdf --css mystyle.css
 - LaTeX math not supported (can use inline code as workaround)
 - Complex table formatting may need adjustment
 
-### 2. .note File Parser/Inspector ✅
+### 2. PDF → .note Converter ✅ (Device Tested)
 
-**Module:** `obsidian_supernote/parsers/note_parser.py`
+**Module:** `obsidian_supernote/converters/note_writer.py`
 
 **Features:**
-- Parses Supernote .note file three-section structure:
-  1. **Binary Header** - Metadata and file information
-  2. **Embedded PNGs** - PDF template pages as images
-  3. **ZIP Archive** - MyScript iink handwriting data
-
-**Extracted Information:**
-- File version and type
-- Device information
-- Recognition language
-- PDF template details (name, MD5 hash, page count)
-- Embedded PNG dimensions and count
-- Handwriting data (pages, ink size)
-- MyScript application version
-- Page-by-page content flags
+- Converts any PDF file to Supernote `.note` format
+- Embeds PDF pages as background templates
+- Support for multiple devices (A5X, A5X2/Manta, A6X, A6X2/Nomad)
+- **Device-tested:** Opens on Supernote Manta and allows handwriting
+- Intelligent metadata generation:
+  - Generates unique File IDs and Page IDs
+  - Correctly calculates Style MD5s and size suffixes
+  - Sets appropriate device equipment codes (e.g., `N5` for Manta)
+  - Includes required "tail" marker and PDFSTYLELIST data
+- Preserve aspect ratio and high-resolution rendering
 
 **CLI Command:**
 ```bash
-obsidian-supernote inspect note_file.note [--save-images output_dir]
+obsidian-supernote pdf-to-note input.pdf output.note [--device A5X2] [--dpi 300]
 ```
 
 **Usage Example:**
 ```bash
-# Inspect a .note file
-obsidian-supernote inspect "MyNote.note"
+# Basic conversion for Manta
+obsidian-supernote pdf-to-note journal.pdf journal.note --device A5X2
 
-# Inspect and extract PNG images
-obsidian-supernote inspect "MyNote.note" --save-images extracted/
+# For Nomad
+obsidian-supernote pdf-to-note journal.pdf journal.note --device Nomad
 ```
 
-**Output Format:**
-- File Summary (name, size, version, device, language, template)
-- Embedded Images (count, size, dimensions)
-- Handwriting Data (archive size, pages, content flags)
-- Pages Detail (per-page content and ink size)
-- Optional: Save extracted PNGs to directory
+**Tests:** Device-tested on Supernote Manta (2026-01-19)
 
-**Tests:** 6 tests (4 passing, 2 skipped pending real .note files)
+### 3. PNG → .note Converter ✅ (Device Tested)
 
-**Capabilities:**
-- `parse()` - Complete file parsing
-- `get_summary()` - Quick overview
-- `get_png_image(index)` - Extract specific PNG
-- `save_png_images(dir)` - Extract all PNGs
+**Module:** `obsidian_supernote/converters/note_writer.py`
+
+**Features:**
+- Converts PNG templates to Supernote `.note` format
+- Uses simpler PNG template format (no PDFSTYLELIST)
+- **Device-tested:** Opens on Supernote Manta and allows handwriting
+- Preserves exact PNG bytes when already correct size
+- Auto-resize if PNG dimensions don't match device
+
+**Python API:**
+```python
+from obsidian_supernote.converters.note_writer import convert_png_to_note
+
+# Basic conversion
+convert_png_to_note("template.png", "output.note", device="A5X2")
+
+# With custom template name
+convert_png_to_note("my_template.png", "output.note", template_name="custom_name")
+```
+
+**Tests:** Device-tested on Supernote Manta (2026-01-19)
+
+### 4. .note → Markdown Converter ✅
+
+**Module:** `obsidian_supernote/converters/note_to_obsidian.py`
+
+**Features:**
+- Extracts handwriting and templates from `.note` files as PNG images
+- Generates Obsidian-compatible Markdown files
+- **Metadata:** Includes YAML frontmatter with source info, page count, and import date
+- **Obsidian Support:** Uses `![[image]]` embeds by default
+- **Batch Export:** Handles multi-page notes automatically
+
+**CLI Command:**
+```bash
+obsidian-supernote note-to-md input.note output.md [--image-dir images/] [--embed/--no-embed]
+```
+
+**Known Limitations:**
+- OCR text extraction (Google Gemini / Tesseract) is still in progress
+- Currently exports handwriting as images only
 
 ## In Progress Features
 
-### 3. .note → Markdown Converter ⚠️ (Planned)
-
-**Status:** Not yet started
-
-**Planned Features:**
-- Extract handwriting as PNG images
-- OCR text extraction (Google Gemini / Tesseract)
-- Generate markdown with embedded images
-- Preserve metadata in YAML frontmatter
-
-**CLI Command (planned):**
-```bash
-obsidian-supernote note-to-md input.note output.md [--ocr] [--images]
-```
-
-### 4. Sync Engine ⚠️ (Planned)
+### 5. Sync Engine ⚠️ (Planned)
 
 **Status:** Not yet started
 
@@ -136,7 +148,7 @@ obsidian-supernote note-to-md input.note output.md [--ocr] [--images]
 obsidian-supernote sync [--config config.yml] [--dry-run]
 ```
 
-### 5. Configuration Management ⚠️ (Planned)
+### 6. Configuration Management ⚠️ (Planned)
 
 **Status:** Not yet started
 
@@ -148,14 +160,15 @@ obsidian-supernote status
 
 ## Test Coverage
 
-**Overall:** 10% coverage (6 passing tests)
+**Overall:** 15% coverage (12 passing tests)
 
 **By Module:**
 - `obsidian_supernote/__init__.py`: 100%
 - `obsidian_supernote/parsers/__init__.py`: 100%
-- `obsidian_supernote/parsers/note_parser.py`: 18% (basic tests)
-- `obsidian_supernote/converters/markdown_to_pdf.py`: 12% (tests skip without GTK+)
-- `obsidian_supernote/cli.py`: 0% (integration tests pending)
+- `obsidian_supernote/parsers/note_parser.py`: 18%
+- `obsidian_supernote/converters/markdown_to_pdf.py`: 12%
+- `obsidian_supernote/converters/note_writer.py`: 45% (verified against golden files)
+- `obsidian_supernote/cli.py`: 10%
 
 ## Dependencies Status
 

@@ -1,7 +1,7 @@
 # Obsidian-Supernote Sync Roadmap
 
-**Last Updated:** 2026-01-18
-**Status:** Phase 1 - Fixing .note Generation
+**Last Updated:** 2026-01-19
+**Status:** Phase 1 Complete - Ready for Phase 2
 
 ## End Goal
 
@@ -36,60 +36,45 @@ Bi-directional sync between Obsidian and Supernote:
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Markdown → PDF | ✅ Working | Via Pandoc + MiKTeX |
-| PDF → .note | ⚠️ Partial | supernotelib reads it, device rejects as "corrupted" |
+| PDF → .note | ✅ Working | Device-tested, opens and allows writing |
+| PNG → .note | ✅ Working | Device-tested, opens and allows writing |
 | .note → PNG | ✅ Working | Via supernotelib |
 | .note → Markdown | ✅ Working | Via supernotelib + note_to_obsidian.py |
 | Golden sources | ✅ Complete | 10 reference files from Manta device |
 
 ## Phases
 
-### Phase 1: Fix .note Generation (Current)
+### Phase 1: Fix .note Generation ✅ COMPLETE
 
 **Goal:** Generate .note files that the Supernote device accepts
 
-#### Step 1.1: Analyze Golden Sources
+**Completed 2026-01-19** - Both PNG and PDF template converters working on device.
 
-Compare real device files with generated files to identify differences:
+#### Key Discoveries
 
-```bash
-cd C:\Edwin\repos\obsidian-supernote-sync
+| Issue | Solution |
+|-------|----------|
+| Device equipment code | Use `N5` for Manta (not `A5X2`) |
+| IS_OLD_APPLY_EQUIPMENT | Must be `1` |
+| MODULE_LABEL | Use `none` (not `SNFILE_FEATURE`) |
+| BGLAYER LAYERTYPE | Use `NOTE` (not `MARK`) |
+| Missing "tail" marker | Add `tail` (4 bytes) after footer content |
+| Layer count | All 5 layers must be referenced (unused = address 0) |
+| LAYERINFO format | Uses `#` instead of `:` as JSON separator |
 
-# Dump a real PNG-template note
-python examples/analysis/dump_structure.py \
-    examples/golden_sources/png_template/standard_png_blank.note
+#### Converter Functions
 
-# Dump a real PDF-template note
-python examples/analysis/dump_structure.py \
-    examples/golden_sources/pdf_template/standard_pdf_blank.note
-
-# Compare real vs generated PDF-based files
-python examples/analysis/compare_notes.py \
-    examples/golden_sources/pdf_template/standard_pdf_blank.note \
-    examples/pdf_to_note/sample_document.note
+**PNG Template Converter:**
+```python
+from obsidian_supernote.converters.note_writer import convert_png_to_note
+convert_png_to_note("template.png", "output.note", device="A5X2")
 ```
 
-#### Step 1.2: Identify Format Differences
-
-Known suspects from initial analysis:
-
-| Field | Generated | Real File | Action |
-|-------|-----------|-----------|--------|
-| PDFSTYLELIST | Missing | Present (e.g., 494) | Investigate purpose |
-| IS_OLD_APPLY_EQUIPMENT | 0 | 1 | Test with 1 |
-| STYLE_style_white_a5x2 | Missing | Present | Add default style |
-
-#### Step 1.3: Update note_writer.py
-
-Fix the format based on analysis findings:
-- File: `obsidian_supernote/converters/note_writer.py`
-- Test after each change with supernotelib first, then device
-
-#### Step 1.4: Device Testing
-
-1. Generate test .note file
-2. Copy to Supernote via Partner app or USB
-3. Attempt to open on device
-4. If fails, compare with working file and iterate
+**PDF Template Converter:**
+```python
+from obsidian_supernote.converters.note_writer import convert_pdf_to_note
+convert_pdf_to_note("document.pdf", "output.note", device="A5X2")
+```
 
 ### Phase 2: Complete Conversion Pipeline
 

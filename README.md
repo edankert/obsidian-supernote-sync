@@ -4,16 +4,25 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 
 ## Project Status
 
-**Current Phase:** Development Environment Setup
-**Version:** 0.1.0-alpha
+**Current Phase:** Phase 1 Complete - Core Converters Working
+**Version:** 0.2.0-alpha
 
-## Features (Planned)
+## Features
 
-- Convert Obsidian markdown files to Supernote-compatible PDFs
-- Convert Supernote .note files to Obsidian markdown with OCR
+### Working ✅
+
+- **Markdown → PDF**: Convert Obsidian markdown to Supernote-optimized PDFs (via Pandoc)
+- **PDF → .note**: Convert PDFs to annotatable Supernote .note files (device-tested)
+- **PNG → .note**: Convert PNG templates to .note files (device-tested)
+- **.note → PNG**: Extract pages as PNG images (via supernotelib)
+- **.note → Markdown**: Export handwritten notes to Obsidian markdown
+
+### Planned
+
 - Bi-directional sync with conflict detection
 - USB and Cloud sync support
 - Intelligent change detection using MD5 hashing
+- OCR for handwriting recognition
 
 ## Quick Start
 

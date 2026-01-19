@@ -51,8 +51,23 @@ class NoteFileWriter:
     ADDRESS_SIZE = 4
     LENGTH_FIELD_SIZE = 4
 
-    # Layer names in order
-    LAYER_NAMES = ["MAINLAYER", "LAYER1", "LAYER2", "LAYER3", "BGLAYER"]
+    # Layer names in order - all 5 must be present in page metadata
+    # Only MAINLAYER and BGLAYER have actual content, others have address 0
+    ALL_LAYER_NAMES = ["MAINLAYER", "LAYER1", "LAYER2", "LAYER3", "BGLAYER"]
+    ACTIVE_LAYERS = ["MAINLAYER", "BGLAYER"]  # Layers with actual content
+
+    # Empty layer RLE data (600 bytes of 0x62 0xff pattern = blank white layer)
+    EMPTY_LAYER_RLE = bytes([0x62, 0xff] * 300)  # 600 bytes
+
+    # Device equipment name mapping (internal codes used by device)
+    DEVICE_EQUIPMENT = {
+        "A5X": "A5X",      # Unknown internal code, using commercial name
+        "A5X2": "N5",      # Manta uses "N5"
+        "Manta": "N5",     # Alias for A5X2
+        "A6X": "A6X",      # Unknown internal code
+        "A6X2": "A6X2",    # Unknown internal code, Nomad
+        "Nomad": "A6X2",   # Alias for A6X2
+    }
 
     def __init__(
         self,
@@ -105,12 +120,16 @@ class NoteFileWriter:
         # Generate per-page MD5 hashes
         page_md5s = [hashlib.md5(png).hexdigest() for png in png_pages]
 
+        # PDF style MD5 uses the last page's MD5 (observed from golden files)
+        # instead of the PDF file's MD5
+        pdf_md5_to_use = page_md5s[-1] if page_md5s else pdf_md5
+
         # Generate .note file
         self._write_note_file(
             output_path,
             png_pages,
             pdf_path.stem,
-            pdf_md5,
+            pdf_md5_to_use,
             pdf_size,
             page_md5s,
         )
@@ -160,6 +179,56 @@ class NoteFileWriter:
             page_md5s,
         )
 
+    def convert_png_template_to_note(
+        self,
+        png_path: Path,
+        output_path: Path,
+        template_name: str | None = None,
+    ) -> None:
+        """Convert a PNG template to a Supernote .note file.
+
+        This creates a .note file using PNG template format, which is simpler
+        than the PDF format and matches how the device creates notes from
+        PNG templates in MyStyle folder.
+
+        Args:
+            png_path: Path to input PNG template file
+            output_path: Path to output .note file
+            template_name: Template name (defaults to PNG filename without extension)
+        """
+        png_path = Path(png_path)
+        output_path = Path(output_path)
+
+        # Check if PNG needs resizing
+        img = Image.open(png_path)
+        if img.size == (self.template_width, self.template_height):
+            # Use raw PNG data to preserve exact bytes (avoid re-encoding)
+            png_data = png_path.read_bytes()
+        else:
+            # Resize and re-encode
+            img = img.resize(
+                (self.template_width, self.template_height),
+                Image.Resampling.LANCZOS,
+            )
+            buffer = BytesIO()
+            img.save(buffer, format="PNG")
+            png_data = buffer.getvalue()
+
+        # Calculate MD5 of PNG data
+        png_md5 = hashlib.md5(png_data).hexdigest()
+
+        # Use filename as template name if not specified
+        if template_name is None:
+            template_name = png_path.stem
+
+        # Generate .note file with PNG template format
+        self._write_png_template_note_file(
+            output_path,
+            png_data,
+            template_name,
+            png_md5,
+        )
+
     def _convert_pdf_to_pngs(
         self,
         pdf_path: Path,
@@ -188,10 +257,10 @@ class NoteFileWriter:
             mat = fitz.Matrix(zoom, zoom)
 
             # Render page to pixmap
-            pix = page.get_pixmap(matrix=mat, alpha=False)
+            pix = page.get_pixmap(matrix=mat, alpha=True)
 
             # Convert to PIL Image
-            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            img = Image.frombytes("RGBA", [pix.width, pix.height], pix.samples)
 
             # Resize to Supernote dimensions
             img = img.resize(
@@ -201,7 +270,7 @@ class NoteFileWriter:
 
             # Convert to PNG bytes
             buffer = BytesIO()
-            img.save(buffer, format="PNG", optimize=True)
+            img.save(buffer, format="PNG")
             png_pages.append(buffer.getvalue())
 
         doc.close()
@@ -217,6 +286,18 @@ class NoteFileWriter:
         page_md5s: List[str],
     ) -> None:
         """Write the .note file with correct binary structure.
+
+        File structure (matching real device files):
+        1. Filetype + Signature (24 bytes)
+        2. Header block
+        3. PDFSTYLELIST data block (base64-encoded style names)
+        4. PNG data for each page (BGLAYER content)
+        5. Default style RLE data (STYLE_style_white_a5x2)
+        6. Empty MAINLAYER RLE data for each page
+        7. Layer metadata blocks (MAINLAYER + BGLAYER per page)
+        8. Page metadata blocks
+        9. Footer block (no "tail" marker)
+        10. Footer address (4 bytes)
 
         Args:
             output_path: Path to output file
@@ -235,6 +316,15 @@ class NoteFileWriter:
         )
         header_bytes = header_content.encode("utf-8")
 
+        # Build PDFSTYLELIST content (base64-encoded style names, comma-separated)
+        pdfstylelist_entries = []
+        for i, page_md5 in enumerate(page_md5s, start=1):
+            style_name = f"user_pdf_{pdf_name}_{i}_{page_md5}_{pdf_size}"
+            encoded = base64.b64encode(style_name.encode()).decode()
+            pdfstylelist_entries.append(encoded)
+        pdfstylelist_content = ",".join(pdfstylelist_entries) + ","
+        pdfstylelist_bytes = pdfstylelist_content.encode("utf-8")
+
         # We'll build the file in stages, tracking addresses
         # Start position after filetype + signature
         current_pos = len(self.FILETYPE) + len(self.SIGNATURE)
@@ -243,32 +333,55 @@ class NoteFileWriter:
         header_address = current_pos
         current_pos += self.LENGTH_FIELD_SIZE + len(header_bytes)
 
-        # Store layer content (PNG data for BGLAYER) and metadata addresses
-        layer_content_addresses = []  # List of (bglayer_content_address,) per page
-        layer_metadata_addresses = []  # List of [MAINLAYER, LAYER1, ..., BGLAYER] addresses per page
-        page_metadata_addresses = []
+        # PDFSTYLELIST data block
+        pdfstylelist_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(pdfstylelist_bytes)
 
-        # Phase 1: Calculate addresses for layer content (PNG data)
-        for page_idx, png_data in enumerate(png_pages):
-            # BGLAYER content address (only BGLAYER has content for PDF-based notes)
-            bglayer_content_addr = current_pos
+        # PNG data for each page (BGLAYER content)
+        bglayer_content_addresses = []
+        for png_data in png_pages:
+            bglayer_content_addresses.append(current_pos)
             current_pos += self.LENGTH_FIELD_SIZE + len(png_data)
-            layer_content_addresses.append(bglayer_content_addr)
 
-        # Phase 2: Calculate addresses for layer metadata blocks
+        # Default style RLE data (STYLE_style_white_a5x2)
+        style_white_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(self.EMPTY_LAYER_RLE)
+
+        # Empty MAINLAYER RLE data for each page
+        mainlayer_content_addresses = []
+        for _ in range(num_pages):
+            mainlayer_content_addresses.append(current_pos)
+            current_pos += self.LENGTH_FIELD_SIZE + len(self.EMPTY_LAYER_RLE)
+
+        # Layer metadata blocks (MAINLAYER + BGLAYER per page)
+        layer_metadata_addresses = []
         for page_idx in range(num_pages):
-            page_layer_addrs = []
-            for layer_idx, layer_name in enumerate(self.LAYER_NAMES):
-                layer_addr = current_pos
-                layer_meta = self._build_layer_metadata(
-                    layer_name,
-                    layer_content_addresses[page_idx] if layer_name == "BGLAYER" else 0,
-                )
-                current_pos += self.LENGTH_FIELD_SIZE + len(layer_meta.encode("utf-8"))
-                page_layer_addrs.append(layer_addr)
+            page_layer_addrs = {}
+            # MAINLAYER metadata
+            mainlayer_addr = current_pos
+            mainlayer_meta = self._build_layer_metadata(
+                "MAINLAYER",
+                mainlayer_content_addresses[page_idx],
+            )
+            current_pos += self.LENGTH_FIELD_SIZE + len(mainlayer_meta.encode("utf-8"))
+            page_layer_addrs["MAINLAYER"] = mainlayer_addr
+
+            # BGLAYER metadata
+            bglayer_addr = current_pos
+            bglayer_meta = self._build_layer_metadata(
+                "BGLAYER",
+                bglayer_content_addresses[page_idx],
+            )
+            current_pos += self.LENGTH_FIELD_SIZE + len(bglayer_meta.encode("utf-8"))
+            page_layer_addrs["BGLAYER"] = bglayer_addr
+
+            # Unused layers have address 0
+            for layer_name in ["LAYER1", "LAYER2", "LAYER3"]:
+                page_layer_addrs[layer_name] = 0
             layer_metadata_addresses.append(page_layer_addrs)
 
-        # Phase 3: Calculate addresses for page metadata blocks
+        # Page metadata blocks
+        page_metadata_addresses = []
         for page_idx in range(num_pages):
             page_addr = current_pos
             page_meta = self._build_page_metadata(
@@ -281,17 +394,17 @@ class NoteFileWriter:
             current_pos += self.LENGTH_FIELD_SIZE + len(page_meta.encode("utf-8"))
             page_metadata_addresses.append(page_addr)
 
-        # Phase 4: Calculate footer address
+        # Footer block
         footer_address = current_pos
-
-        # Build footer content
         footer_content = self._build_footer_content(
             header_address,
             page_metadata_addresses,
-            layer_content_addresses,  # PNG data addresses
+            bglayer_content_addresses,
             pdf_name,
             page_md5s,
             pdf_size,
+            pdfstylelist_address=pdfstylelist_address,
+            style_white_address=style_white_address,
         )
         footer_bytes = footer_content.encode("utf-8")
 
@@ -307,23 +420,43 @@ class NoteFileWriter:
             f.write(struct.pack("<I", len(header_bytes)))
             f.write(header_bytes)
 
-            # 4. Layer content (PNG for BGLAYER only)
-            for page_idx, png_data in enumerate(png_pages):
+            # 4. PDFSTYLELIST data block
+            f.write(struct.pack("<I", len(pdfstylelist_bytes)))
+            f.write(pdfstylelist_bytes)
+
+            # 5. PNG data for each page (BGLAYER content)
+            for png_data in png_pages:
                 f.write(struct.pack("<I", len(png_data)))
                 f.write(png_data)
 
-            # 5. Layer metadata blocks (5 per page)
-            for page_idx in range(num_pages):
-                for layer_idx, layer_name in enumerate(self.LAYER_NAMES):
-                    layer_meta = self._build_layer_metadata(
-                        layer_name,
-                        layer_content_addresses[page_idx] if layer_name == "BGLAYER" else 0,
-                    )
-                    layer_meta_bytes = layer_meta.encode("utf-8")
-                    f.write(struct.pack("<I", len(layer_meta_bytes)))
-                    f.write(layer_meta_bytes)
+            # 6. Default style RLE data (STYLE_style_white_a5x2)
+            f.write(struct.pack("<I", len(self.EMPTY_LAYER_RLE)))
+            f.write(self.EMPTY_LAYER_RLE)
 
-            # 6. Page metadata blocks
+            # 7. Empty MAINLAYER RLE data for each page
+            for _ in range(num_pages):
+                f.write(struct.pack("<I", len(self.EMPTY_LAYER_RLE)))
+                f.write(self.EMPTY_LAYER_RLE)
+
+            # 8. Layer metadata blocks (MAINLAYER + BGLAYER per page)
+            for page_idx in range(num_pages):
+                # MAINLAYER
+                mainlayer_meta = self._build_layer_metadata(
+                    "MAINLAYER",
+                    mainlayer_content_addresses[page_idx],
+                )
+                f.write(struct.pack("<I", len(mainlayer_meta.encode("utf-8"))))
+                f.write(mainlayer_meta.encode("utf-8"))
+
+                # BGLAYER
+                bglayer_meta = self._build_layer_metadata(
+                    "BGLAYER",
+                    bglayer_content_addresses[page_idx],
+                )
+                f.write(struct.pack("<I", len(bglayer_meta.encode("utf-8"))))
+                f.write(bglayer_meta.encode("utf-8"))
+
+            # 9. Page metadata blocks
             for page_idx in range(num_pages):
                 page_meta = self._build_page_metadata(
                     page_idx,
@@ -332,16 +465,282 @@ class NoteFileWriter:
                     pdf_size,
                     layer_metadata_addresses[page_idx],
                 )
-                page_meta_bytes = page_meta.encode("utf-8")
-                f.write(struct.pack("<I", len(page_meta_bytes)))
-                f.write(page_meta_bytes)
+                f.write(struct.pack("<I", len(page_meta.encode("utf-8"))))
+                f.write(page_meta.encode("utf-8"))
 
-            # 7. Footer block
+            # 10. Footer block
             f.write(struct.pack("<I", len(footer_bytes)))
             f.write(footer_bytes)
 
-            # 8. Footer address (last 4 bytes)
+            # 11. "tail" marker
+            f.write(b"tail")
+
+            # 12. Footer address (last 4 bytes)
             f.write(struct.pack("<I", footer_address))
+
+    def _write_png_template_note_file(
+        self,
+        output_path: Path,
+        png_data: bytes,
+        template_name: str,
+        png_md5: str,
+    ) -> None:
+        """Write .note file with PNG template format.
+
+        PNG template format is simpler than PDF format:
+        1. Filetype + Signature (24 bytes)
+        2. Header block (simpler - no PDF fields)
+        3. PNG data for BGLAYER
+        4. Empty MAINLAYER RLE data (600 bytes)
+        5. MAINLAYER metadata
+        6. BGLAYER metadata
+        7. Page metadata
+        8. Footer (simpler - no PDFSTYLELIST, no COVER_0)
+        9. Footer address (4 bytes)
+
+        Args:
+            output_path: Path to output file
+            png_data: PNG image data for background
+            template_name: Template name (e.g., "blank_template_a5x2")
+            png_md5: MD5 hash of PNG data
+        """
+        file_id = self._generate_file_id()
+
+        # Build header content (PNG template format - simpler than PDF)
+        header_content = self._build_png_header_content(file_id)
+        header_bytes = header_content.encode("utf-8")
+
+        # Calculate addresses
+        # Start position after filetype + signature
+        current_pos = len(self.FILETYPE) + len(self.SIGNATURE)
+
+        # Header block at position 24
+        header_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(header_bytes)
+
+        # PNG data for BGLAYER
+        bglayer_content_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(png_data)
+
+        # Empty MAINLAYER RLE data
+        mainlayer_content_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(self.EMPTY_LAYER_RLE)
+
+        # MAINLAYER metadata
+        mainlayer_meta = self._build_layer_metadata("MAINLAYER", mainlayer_content_address)
+        mainlayer_meta_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(mainlayer_meta.encode("utf-8"))
+
+        # BGLAYER metadata
+        bglayer_meta = self._build_layer_metadata("BGLAYER", bglayer_content_address)
+        bglayer_meta_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(bglayer_meta.encode("utf-8"))
+
+        # Layer addresses dict
+        layer_addresses = {
+            "MAINLAYER": mainlayer_meta_address,
+            "LAYER1": 0,
+            "LAYER2": 0,
+            "LAYER3": 0,
+            "BGLAYER": bglayer_meta_address,
+        }
+
+        # Page metadata (PNG template format)
+        page_meta = self._build_png_page_metadata(
+            template_name,
+            png_md5,
+            layer_addresses,
+        )
+        page_metadata_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(page_meta.encode("utf-8"))
+
+        # Footer (PNG template format - simpler)
+        footer_address = current_pos
+        footer_content = self._build_png_footer_content(
+            header_address,
+            page_metadata_address,
+            bglayer_content_address,
+            template_name,
+            png_md5,
+        )
+        footer_bytes = footer_content.encode("utf-8")
+
+        # Write the file
+        with open(output_path, "wb") as f:
+            # 1. Filetype (4 bytes)
+            f.write(self.FILETYPE)
+
+            # 2. Signature (20 bytes)
+            f.write(self.SIGNATURE)
+
+            # 3. Header block
+            f.write(struct.pack("<I", len(header_bytes)))
+            f.write(header_bytes)
+
+            # 4. PNG data for BGLAYER
+            f.write(struct.pack("<I", len(png_data)))
+            f.write(png_data)
+
+            # 5. Empty MAINLAYER RLE data
+            f.write(struct.pack("<I", len(self.EMPTY_LAYER_RLE)))
+            f.write(self.EMPTY_LAYER_RLE)
+
+            # 6. MAINLAYER metadata
+            f.write(struct.pack("<I", len(mainlayer_meta.encode("utf-8"))))
+            f.write(mainlayer_meta.encode("utf-8"))
+
+            # 7. BGLAYER metadata
+            f.write(struct.pack("<I", len(bglayer_meta.encode("utf-8"))))
+            f.write(bglayer_meta.encode("utf-8"))
+
+            # 8. Page metadata
+            f.write(struct.pack("<I", len(page_meta.encode("utf-8"))))
+            f.write(page_meta.encode("utf-8"))
+
+            # 9. Footer block
+            f.write(struct.pack("<I", len(footer_bytes)))
+            f.write(footer_bytes)
+
+            # 10. "tail" marker (PNG template format has this)
+            f.write(b"tail")
+
+            # 11. Footer address (last 4 bytes)
+            f.write(struct.pack("<I", footer_address))
+
+    def _build_png_header_content(self, file_id: str) -> str:
+        """Build header content for PNG template format.
+
+        PNG template headers are simpler - no PDF-related fields.
+        Tag order must match real device files exactly.
+
+        Args:
+            file_id: Unique file ID
+
+        Returns:
+            Header content string
+        """
+        equipment = self.DEVICE_EQUIPMENT.get(self.device, "N5")
+
+        # Tag order from real PNG template file
+        tags = [
+            f"<FILE_TYPE:NOTE>",
+            f"<APPLY_EQUIPMENT:{equipment}>",
+            f"<FINALOPERATION_PAGE:1>",
+            f"<FINALOPERATION_LAYER:1>",
+            f"<DEVICE_DPI:0>",
+            f"<SOFT_DPI:0>",
+            f"<FILE_PARSE_TYPE:0>",
+            f"<RATTA_ETMD:0>",
+            f"<FILE_ID:{file_id}>",
+            f"<FILE_RECOGN_TYPE:0>",
+            f"<FILE_RECOGN_LANGUAGE:none>",
+            f"<HORIZONTAL_CHECK:0>",
+            f"<IS_OLD_APPLY_EQUIPMENT:1>",
+            f"<ANTIALIASING_CONVERT:2>",
+        ]
+
+        return "".join(tags)
+
+    def _build_png_page_metadata(
+        self,
+        template_name: str,
+        png_md5: str,
+        layer_addresses: dict,
+    ) -> str:
+        """Build page metadata for PNG template format.
+
+        PNG template page metadata differs from PDF:
+        - PAGESTYLE: user_{template_name} (no page number)
+        - PAGESTYLEMD5: {md5} (no size suffix)
+        - No EXTERNALLINKINFO, no IDTABLE
+
+        Tag order must match real device files exactly.
+
+        Args:
+            template_name: Template name
+            png_md5: MD5 hash of PNG
+            layer_addresses: Dict of layer name to metadata address
+
+        Returns:
+            Page metadata string
+        """
+        page_id = self._generate_page_id()
+
+        # LAYERINFO matches real device format exactly
+        layer_info = [
+            {"layerId": 3, "name": "Layer 3", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True, "isDeleted": True, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": 2, "name": "Layer 2", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True, "isDeleted": True, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": 1, "name": "Layer 1", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True, "isDeleted": True, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": 0, "name": "Main Layer", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": True, "isVisible": True, "isDeleted": False, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": -1, "name": "Background Layer", "isBackgroundLayer": True, "isAllowAdd": True, "isCurrentLayer": False, "isVisible": True, "isDeleted": False, "isAllowUp": False, "isAllowDown": False},
+        ]
+        # Replace : with # in JSON (Supernote uses # as separator)
+        layer_info_str = json.dumps(layer_info, separators=(',', ':')).replace(':', '#')
+
+        # Tag order from real PNG template file
+        tags = [
+            f"<PAGESTYLE:user_{template_name}>",
+            f"<PAGESTYLEMD5:{png_md5}>",
+            f"<LAYERSEQ:MAINLAYER,BGLAYER>",
+            f"<PAGEID:{page_id}>",
+        ]
+
+        # Layer addresses in order
+        for layer_name in self.ALL_LAYER_NAMES:
+            tags.append(f"<{layer_name}:{layer_addresses[layer_name]}>")
+
+        # Remaining tags in exact order from real PNG template
+        tags.extend([
+            f"<TOTALPATH:0>",
+            f"<THUMBNAILTYPE:0>",
+            f"<RECOGNSTATUS:0>",
+            f"<RECOGNTEXT:0>",
+            f"<RECOGNFILE:0>",
+            f"<LAYERINFO:{layer_info_str}>",
+            f"<RECOGNTYPE:0>",
+            f"<RECOGNFILESTATUS:0>",
+            f"<RECOGNLANGUAGE:none>",
+            f"<ORIENTATION:1000>",
+            f"<PAGETEXTBOX:0>",
+            f"<DISABLE:none>",
+        ])
+
+        return "".join(tags)
+
+    def _build_png_footer_content(
+        self,
+        header_address: int,
+        page_address: int,
+        png_address: int,
+        template_name: str,
+        png_md5: str,
+    ) -> str:
+        """Build footer content for PNG template format.
+
+        PNG template footers are simpler - no COVER_0, no PDFSTYLELIST,
+        no STYLE_style_white_a5x2.
+
+        STYLE entry format: STYLE_user_{template}{md5}:{address}
+        (no underscore between template and md5, no size suffix)
+
+        Args:
+            header_address: Address of header block
+            page_address: Address of page metadata block
+            png_address: Address of PNG data (BGLAYER content)
+            template_name: Template name
+            png_md5: MD5 hash of PNG
+
+        Returns:
+            Footer content string
+        """
+        tags = [
+            f"<PAGE1:{page_address}>",
+            f"<DIRTY:0>",
+            f"<FILE_FEATURE:{header_address}>",
+            f"<STYLE_user_{template_name}{png_md5}:{png_address}>",
+        ]
+
+        return "".join(tags)
 
     def _build_header_content(
         self,
@@ -363,22 +762,15 @@ class NoteFileWriter:
         Returns:
             Header content string
         """
-        # Map device names to APPLY_EQUIPMENT values
-        device_map = {
-            "A5X": "A5X",
-            "A5X2": "A5X2",  # Manta
-            "Manta": "A5X2",
-            "A6X": "A6X",
-            "A6X2": "A6X2",  # Nomad
-            "Nomad": "A6X2",
-        }
-        equipment = device_map.get(self.device, "A5X2")
+        # Get internal equipment code for device
+        equipment = self.DEVICE_EQUIPMENT.get(self.device, "N5")
 
+        # Tag order must match real device files exactly
         tags = [
-            f"<MODULE_LABEL:SNFILE_FEATURE>",
+            f"<MODULE_LABEL:none>",
             f"<FILE_TYPE:NOTE>",
             f"<APPLY_EQUIPMENT:{equipment}>",
-            f"<FINALOPERATION_PAGE:1>",
+            f"<FINALOPERATION_PAGE:{num_pages}>",
             f"<FINALOPERATION_LAYER:1>",
             f"<DEVICE_DPI:0>",
             f"<SOFT_DPI:0>",
@@ -386,14 +778,14 @@ class NoteFileWriter:
             f"<RATTA_ETMD:0>",
             f"<APP_VERSION:0>",
             f"<FILE_ID:{file_id}>",
-            f"<FILE_RECOGN_TYPE:1>",
-            f"<FILE_RECOGN_LANGUAGE:{self.language}>",
+            f"<FILE_RECOGN_TYPE:0>",
+            f"<FILE_RECOGN_LANGUAGE:none>",
             f"<PDFSTYLE:user_pdf_{pdf_name}_{num_pages}>",
             f"<PDFSTYLEMD5:{pdf_md5}_{pdf_size}>",
             f"<STYLEUSAGETYPE:2>",
             f"<HIGHLIGHTINFO:0>",
             f"<HORIZONTAL_CHECK:0>",
-            f"<IS_OLD_APPLY_EQUIPMENT:0>",
+            f"<IS_OLD_APPLY_EQUIPMENT:1>",
             f"<ANTIALIASING_CONVERT:2>",
         ]
 
@@ -407,22 +799,24 @@ class NoteFileWriter:
         """Build layer metadata block.
 
         Args:
-            layer_name: Name of the layer (MAINLAYER, LAYER1, etc.)
+            layer_name: Name of the layer (MAINLAYER, BGLAYER)
             bitmap_address: Address of layer bitmap content (0 if none)
 
         Returns:
             Layer metadata string
         """
-        layer_type = "NOTE" if layer_name == "MAINLAYER" else "MARK"
+        # Both MAINLAYER and BGLAYER use NOTE type
+        layer_type = "NOTE"
 
         tags = [
-            f"<LAYERNAME:{layer_name}>",
-            f"<LAYERPROTOCOL:RATTA_RLE>",
             f"<LAYERTYPE:{layer_type}>",
+            f"<LAYERPROTOCOL:RATTA_RLE>",
+            f"<LAYERNAME:{layer_name}>",
+            f"<LAYERPATH:0>",
+            f"<LAYERBITMAP:{bitmap_address}>",
+            f"<LAYERVECTORGRAPH:0>",
+            f"<LAYERRECOGN:0>",
         ]
-
-        if bitmap_address > 0:
-            tags.append(f"<LAYERBITMAP:{bitmap_address}>")
 
         return "".join(tags)
 
@@ -432,7 +826,7 @@ class NoteFileWriter:
         pdf_name: str,
         page_md5: str,
         pdf_size: int,
-        layer_addresses: List[int],
+        layer_addresses: dict,
     ) -> str:
         """Build page metadata block.
 
@@ -441,7 +835,7 @@ class NoteFileWriter:
             pdf_name: Name of PDF file
             page_md5: MD5 hash of page
             pdf_size: Size of PDF
-            layer_addresses: Addresses of layer metadata blocks
+            layer_addresses: Dict of layer name to address (0 for unused layers)
 
         Returns:
             Page metadata string
@@ -449,17 +843,19 @@ class NoteFileWriter:
         page_num = page_idx + 1
         page_id = self._generate_page_id()
 
-        # Layer info JSON (visibility settings) - use # instead of : for JSON in metadata
+        # Layer info JSON (visibility settings) - matches real device format exactly
+        # Note: layerId=-1 for Background Layer, unused layers have isDeleted=true
         layer_info = [
-            {"layerId": 3, "name": "Layer 3", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True},
-            {"layerId": 2, "name": "Layer 2", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True},
-            {"layerId": 1, "name": "Layer 1", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True},
-            {"layerId": 0, "name": "Main Layer", "isBackgroundLayer": False, "isAllowAdd": True, "isCurrentLayer": True, "isVisible": True},
-            {"layerId": 0, "name": "Background", "isBackgroundLayer": True, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True},
+            {"layerId": 3, "name": "Layer 3", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True, "isDeleted": True, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": 2, "name": "Layer 2", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True, "isDeleted": True, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": 1, "name": "Layer 1", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": False, "isVisible": True, "isDeleted": True, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": 0, "name": "Main Layer", "isBackgroundLayer": False, "isAllowAdd": False, "isCurrentLayer": True, "isVisible": True, "isDeleted": False, "isAllowUp": False, "isAllowDown": False},
+            {"layerId": -1, "name": "Background Layer", "isBackgroundLayer": True, "isAllowAdd": True, "isCurrentLayer": False, "isVisible": True, "isDeleted": False, "isAllowUp": False, "isAllowDown": False},
         ]
         # Replace : with # in JSON (Supernote uses # as separator in metadata)
-        layer_info_str = json.dumps(layer_info, separators=(',', '#')).replace(':', '#')
+        layer_info_str = json.dumps(layer_info, separators=(',', ':')).replace(':', '#')
 
+        # Tag order must match real device files exactly
         tags = [
             f"<PAGESTYLE:user_pdf_{pdf_name}_{page_num}>",
             f"<PAGESTYLEMD5:{page_md5}_{pdf_size}>",
@@ -467,11 +863,11 @@ class NoteFileWriter:
             f"<LAYERSEQ:MAINLAYER,BGLAYER>",
         ]
 
-        # Add layer addresses
-        for i, layer_name in enumerate(self.LAYER_NAMES):
-            tags.append(f"<{layer_name}:{layer_addresses[i]}>")
+        # Add all layer addresses in order (MAINLAYER, LAYER1, LAYER2, LAYER3, BGLAYER)
+        for layer_name in self.ALL_LAYER_NAMES:
+            tags.append(f"<{layer_name}:{layer_addresses[layer_name]}>")
 
-        # Add remaining page metadata
+        # Remaining tags in exact order from real files
         tags.extend([
             f"<TOTALPATH:0>",
             f"<THUMBNAILTYPE:0>",
@@ -485,6 +881,8 @@ class NoteFileWriter:
             f"<EXTERNALLINKINFO:0>",
             f"<IDTABLE:0>",
             f"<ORIENTATION:1000>",
+            f"<PAGETEXTBOX:0>",
+            f"<DISABLE:none>",
         ])
 
         return "".join(tags)
@@ -497,6 +895,8 @@ class NoteFileWriter:
         pdf_name: str,
         page_md5s: List[str],
         pdf_size: int,
+        pdfstylelist_address: int | None = None,
+        style_white_address: int | None = None,
     ) -> str:
         """Build footer content.
 
@@ -507,9 +907,11 @@ class NoteFileWriter:
             pdf_name: Name of PDF file
             page_md5s: MD5 hashes for each page
             pdf_size: Size of PDF
+            pdfstylelist_address: Address of PDFSTYLELIST data block
+            style_white_address: Address for default style RLE data
 
         Returns:
-            Footer content string
+            Footer content string (no "tail" marker - real files don't have it)
         """
         tags = []
 
@@ -522,8 +924,17 @@ class NoteFileWriter:
         tags.append(f"<DIRTY:0>")
         tags.append(f"<FILE_FEATURE:{header_address}>")
 
+        # PDFSTYLELIST - points to PDFSTYLELIST data block
+        if pdfstylelist_address is not None:
+            tags.append(f"<PDFSTYLELIST:{pdfstylelist_address}>")
+
+        # Default style entry - points to default RLE data
+        if style_white_address is not None:
+            tags.append(f"<STYLE_style_white_a5x2:{style_white_address}>")
+
         # Style entries for each page
         # Format: STYLE_{pagestyle}{pagestylemd5}: address
+        # Note: No underscore between pagestyle and pagestylemd5
         # Where pagestyle = user_pdf_{name}_{pagenum}
         # And pagestylemd5 = {md5}_{size}
         for i, (page_md5, png_addr) in enumerate(zip(page_md5s, png_addresses), start=1):
@@ -531,21 +942,19 @@ class NoteFileWriter:
             pagestylemd5 = f"{page_md5}_{pdf_size}"
             tags.append(f"<STYLE_{pagestyle}{pagestylemd5}:{png_addr}>")
 
-        # End marker
-        tags.append("tail")
-
+        # No "tail" marker - real files don't have it
         return "".join(tags)
 
     def _generate_file_id(self) -> str:
         """Generate unique file ID."""
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:17]
-        suffix = "".join(random.choices(string.ascii_letters + string.digits, k=16))
+        suffix = "".join(random.choices(string.ascii_letters + string.digits, k=15))
         return f"F{timestamp}{suffix}"
 
     def _generate_page_id(self) -> str:
         """Generate unique page ID (P + timestamp + random suffix)."""
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:17]
-        suffix = "".join(random.choices(string.ascii_letters + string.digits, k=16))
+        suffix = "".join(random.choices(string.ascii_letters + string.digits, k=15))
         return f"P{timestamp}{suffix}"
 
 
@@ -565,3 +974,25 @@ def convert_pdf_to_note(
     """
     writer = NoteFileWriter(device=device, language=language)
     writer.convert_pdf_to_note(Path(pdf_path), Path(output_path))
+
+
+def convert_png_to_note(
+    png_path: str | Path,
+    output_path: str | Path,
+    device: str = "A5X2",
+    template_name: str | None = None,
+) -> None:
+    """Convert PNG template to .note file.
+
+    This creates a .note file using the simpler PNG template format,
+    which matches how the Supernote device creates notes from PNG
+    templates in the MyStyle folder.
+
+    Args:
+        png_path: Path to input PNG template
+        output_path: Path to output .note file
+        device: Target device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
+        template_name: Template name (defaults to PNG filename)
+    """
+    writer = NoteFileWriter(device=device)
+    writer.convert_png_template_to_note(Path(png_path), Path(output_path), template_name)
