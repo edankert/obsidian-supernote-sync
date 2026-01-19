@@ -95,6 +95,7 @@ class NoteFileWriter:
         pdf_path: Path,
         output_path: Path,
         dpi: int | None = None,
+        realtime: bool = False,
     ) -> None:
         """Convert a PDF file to a Supernote .note file.
 
@@ -102,6 +103,7 @@ class NoteFileWriter:
             pdf_path: Path to input PDF file
             output_path: Path to output .note file
             dpi: DPI for rendering PDF pages (defaults to device native DPI)
+            realtime: Enable realtime handwriting recognition mode
         """
         pdf_path = Path(pdf_path)
         output_path = Path(output_path)
@@ -132,6 +134,7 @@ class NoteFileWriter:
             pdf_md5_to_use,
             pdf_size,
             page_md5s,
+            realtime=realtime,
         )
 
     def convert_images_to_note(
@@ -184,6 +187,7 @@ class NoteFileWriter:
         png_path: Path,
         output_path: Path,
         template_name: str | None = None,
+        realtime: bool = False,
     ) -> None:
         """Convert a PNG template to a Supernote .note file.
 
@@ -195,6 +199,7 @@ class NoteFileWriter:
             png_path: Path to input PNG template file
             output_path: Path to output .note file
             template_name: Template name (defaults to PNG filename without extension)
+            realtime: Enable realtime handwriting recognition mode
         """
         png_path = Path(png_path)
         output_path = Path(output_path)
@@ -227,6 +232,7 @@ class NoteFileWriter:
             png_data,
             template_name,
             png_md5,
+            realtime=realtime,
         )
 
     def _convert_pdf_to_pngs(
@@ -284,6 +290,7 @@ class NoteFileWriter:
         pdf_md5: str,
         pdf_size: int,
         page_md5s: List[str],
+        realtime: bool = False,
     ) -> None:
         """Write the .note file with correct binary structure.
 
@@ -306,13 +313,14 @@ class NoteFileWriter:
             pdf_md5: MD5 hash of original PDF
             pdf_size: Size of original PDF in bytes
             page_md5s: List of MD5 hashes for each page
+            realtime: Enable realtime handwriting recognition mode
         """
         num_pages = len(png_pages)
         file_id = self._generate_file_id()
 
         # Build header content
         header_content = self._build_header_content(
-            pdf_name, num_pages, pdf_md5, pdf_size, file_id
+            pdf_name, num_pages, pdf_md5, pdf_size, file_id, realtime=realtime
         )
         header_bytes = header_content.encode("utf-8")
 
@@ -484,6 +492,7 @@ class NoteFileWriter:
         png_data: bytes,
         template_name: str,
         png_md5: str,
+        realtime: bool = False,
     ) -> None:
         """Write .note file with PNG template format.
 
@@ -503,11 +512,12 @@ class NoteFileWriter:
             png_data: PNG image data for background
             template_name: Template name (e.g., "blank_template_a5x2")
             png_md5: MD5 hash of PNG data
+            realtime: Enable realtime handwriting recognition mode
         """
         file_id = self._generate_file_id()
 
         # Build header content (PNG template format - simpler than PDF)
-        header_content = self._build_png_header_content(file_id)
+        header_content = self._build_png_header_content(file_id, realtime=realtime)
         header_bytes = header_content.encode("utf-8")
 
         # Calculate addresses
@@ -607,7 +617,7 @@ class NoteFileWriter:
             # 11. Footer address (last 4 bytes)
             f.write(struct.pack("<I", footer_address))
 
-    def _build_png_header_content(self, file_id: str) -> str:
+    def _build_png_header_content(self, file_id: str, realtime: bool = False) -> str:
         """Build header content for PNG template format.
 
         PNG template headers are simpler - no PDF-related fields.
@@ -615,11 +625,16 @@ class NoteFileWriter:
 
         Args:
             file_id: Unique file ID
+            realtime: Enable realtime handwriting recognition mode
 
         Returns:
             Header content string
         """
         equipment = self.DEVICE_EQUIPMENT.get(self.device, "N5")
+
+        # Realtime recognition settings
+        recogn_type = "1" if realtime else "0"
+        recogn_language = self.language if realtime else "none"
 
         # Tag order from real PNG template file
         tags = [
@@ -632,8 +647,8 @@ class NoteFileWriter:
             f"<FILE_PARSE_TYPE:0>",
             f"<RATTA_ETMD:0>",
             f"<FILE_ID:{file_id}>",
-            f"<FILE_RECOGN_TYPE:0>",
-            f"<FILE_RECOGN_LANGUAGE:none>",
+            f"<FILE_RECOGN_TYPE:{recogn_type}>",
+            f"<FILE_RECOGN_LANGUAGE:{recogn_language}>",
             f"<HORIZONTAL_CHECK:0>",
             f"<IS_OLD_APPLY_EQUIPMENT:1>",
             f"<ANTIALIASING_CONVERT:2>",
@@ -749,6 +764,7 @@ class NoteFileWriter:
         pdf_md5: str,
         pdf_size: int,
         file_id: str,
+        realtime: bool = False,
     ) -> str:
         """Build header content (metadata tags).
 
@@ -758,12 +774,17 @@ class NoteFileWriter:
             pdf_md5: MD5 hash of PDF
             pdf_size: Size of PDF in bytes
             file_id: Unique file ID
+            realtime: Enable realtime handwriting recognition mode
 
         Returns:
             Header content string
         """
         # Get internal equipment code for device
         equipment = self.DEVICE_EQUIPMENT.get(self.device, "N5")
+
+        # Realtime recognition settings
+        recogn_type = "1" if realtime else "0"
+        recogn_language = self.language if realtime else "none"
 
         # Tag order must match real device files exactly
         tags = [
@@ -778,8 +799,8 @@ class NoteFileWriter:
             f"<RATTA_ETMD:0>",
             f"<APP_VERSION:0>",
             f"<FILE_ID:{file_id}>",
-            f"<FILE_RECOGN_TYPE:0>",
-            f"<FILE_RECOGN_LANGUAGE:none>",
+            f"<FILE_RECOGN_TYPE:{recogn_type}>",
+            f"<FILE_RECOGN_LANGUAGE:{recogn_language}>",
             f"<PDFSTYLE:user_pdf_{pdf_name}_{num_pages}>",
             f"<PDFSTYLEMD5:{pdf_md5}_{pdf_size}>",
             f"<STYLEUSAGETYPE:2>",
@@ -963,6 +984,7 @@ def convert_pdf_to_note(
     output_path: str | Path,
     device: str = "A5X2",
     language: str = "en_GB",
+    realtime: bool = False,
 ) -> None:
     """Convert PDF to .note file.
 
@@ -970,10 +992,11 @@ def convert_pdf_to_note(
         pdf_path: Path to input PDF
         output_path: Path to output .note file
         device: Target device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
-        language: Recognition language
+        language: Recognition language (used when realtime=True)
+        realtime: Enable realtime handwriting recognition mode
     """
     writer = NoteFileWriter(device=device, language=language)
-    writer.convert_pdf_to_note(Path(pdf_path), Path(output_path))
+    writer.convert_pdf_to_note(Path(pdf_path), Path(output_path), realtime=realtime)
 
 
 def convert_png_to_note(
@@ -981,6 +1004,8 @@ def convert_png_to_note(
     output_path: str | Path,
     device: str = "A5X2",
     template_name: str | None = None,
+    language: str = "en_GB",
+    realtime: bool = False,
 ) -> None:
     """Convert PNG template to .note file.
 
@@ -993,6 +1018,8 @@ def convert_png_to_note(
         output_path: Path to output .note file
         device: Target device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
         template_name: Template name (defaults to PNG filename)
+        language: Recognition language (used when realtime=True)
+        realtime: Enable realtime handwriting recognition mode
     """
-    writer = NoteFileWriter(device=device)
-    writer.convert_png_template_to_note(Path(png_path), Path(output_path), template_name)
+    writer = NoteFileWriter(device=device, language=language)
+    writer.convert_png_template_to_note(Path(png_path), Path(output_path), template_name, realtime=realtime)
