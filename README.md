@@ -21,9 +21,9 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 ### Planned
 
 - Bi-directional sync with conflict detection
-- USB and Cloud sync support
+- Cloud-based sync support with automatic change detection
 - Intelligent change detection using MD5 hashing
-- OCR for handwriting recognition
+- Text extraction from Supernote's built-in handwriting recognition (via supernotelib)
 
 ## Quick Start
 

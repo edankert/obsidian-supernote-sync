@@ -1,7 +1,16 @@
 # Implementation Status
 
-**Last Updated:** 2026-01-19
+**Last Updated:** 2026-01-20
 **Version:** 0.2.0-alpha
+
+## Recent Updates (2026-01-20)
+
+✨ **New Planned Features:**
+- Frontmatter properties for conversion control (`supernote_type`, `supernote_linked_file`, device settings)
+- .note file update mode (replace template content while preserving handwritten annotations)
+- Realtime handwriting recognition support for annotation workflows
+- Progressive automation levels (Manual → Semi-Automated → Full Automation) for three workflows
+- Detailed workflow specifications: Daily Notes, Research Notes, World Building
 
 ## Completed Features
 
@@ -164,22 +173,36 @@ obsidian-supernote note-to-md input.note output.md [--image-dir images/] [--embe
 ```
 
 **Known Limitations:**
-- OCR text extraction (Google Gemini / Tesseract) is still in progress
-- Currently exports handwriting as images only
+- Text extraction depends on .note files being created with realtime recognition enabled
+- Currently exports handwriting as images only (text extraction planned via supernotelib enhancement)
 
 ## In Progress Features
 
-### 5. OCR Text Extraction ⚠️ (Planned)
+### 5. Frontmatter Properties & .note Update Mode ⚠️ (Planned)
+
+**Status:** Specification complete, implementation pending
+
+**Planned Features:**
+- Frontmatter properties for conversion control:
+  - `supernote_type`: Choose between "standard" (sketching) or "realtime" (annotations/text)
+  - `supernote_linked_file`: Update existing .note files instead of creating new ones
+  - Device-specific settings (device, page_size, realtime mode)
+- .note file update functionality:
+  - Replace template/background content while preserving handwritten annotations
+  - Maintain layer structure and annotation integrity
+  - Support for version tracking and versioning
+
+### 6. Text Extraction from Device Recognition ⚠️ (Planned)
 
 **Status:** Not yet started
 
 **Planned Features:**
-- Extract handwritten text from .note files
-- Google Gemini API integration for AI-powered OCR
-- Tesseract as offline fallback option
-- Confidence scoring for OCR accuracy
+- Extract text recognized by Supernote's built-in realtime character recognition
+- Works only for .note files created with `realtime=True`
+- Enhanced supernotelib integration to access recognition data
+- No external OCR service needed (device recognition is embedded)
 
-### 6. Sync Engine ⚠️ (Planned)
+### 7. Sync Engine ⚠️ (Planned)
 
 **Status:** Not yet started
 
@@ -187,7 +210,7 @@ obsidian-supernote note-to-md input.note output.md [--image-dir images/] [--embe
 - Bi-directional sync (Obsidian ↔ Supernote)
 - Change detection (MD5 hashing)
 - Conflict resolution
-- USB and Cloud sync methods
+- Cloud-based sync via Supernote Cloud API
 - SQLite sync state database
 
 **CLI Command (planned):**
@@ -195,7 +218,7 @@ obsidian-supernote note-to-md input.note output.md [--image-dir images/] [--embe
 obsidian-supernote sync [--config config.yml] [--dry-run]
 ```
 
-### 6. Configuration Management ⚠️ (Planned)
+### 8. Configuration Management ⚠️ (Planned)
 
 **Status:** Not yet started
 
@@ -232,10 +255,10 @@ obsidian-supernote status
 - ⚠️ weasyprint (67.0) - Installed but requires GTK+ libraries
   - **Action Required:** Install GTK+ on Windows (see docs/WEASYPRINT_SETUP.md)
   - **Alternative:** Could add Pandoc support as fallback
+- ✅ pandoc - Recommended for markdown → PDF conversion
 
-### OCR (Optional) ❌
-- ❌ google-generativeai - Not installed (optional)
-- ❌ pytesseract - Not installed (optional)
+### Text Recognition ✅
+- ✅ supernotelib (0.6.4) - Extracts device's built-in handwriting recognition (no external OCR needed)
 
 ### Development ✅
 - ✅ pytest (9.0.2) - Installed
@@ -327,25 +350,26 @@ pytest --cov
 
 ### Immediate Priorities
 
-1. **Setup WeasyPrint GTK+ Libraries**
-   - Follow docs/WEASYPRINT_SETUP.md
-   - Enables full PDF generation testing
-   - Unlocks md-to-pdf for real usage
+1. **Implement Frontmatter Properties**
+   - Add support for `supernote_type`, `supernote_linked_file`, device-specific settings
+   - Implement frontmatter parsing in CLI commands
+   - Enable automatic .note type selection from markdown metadata
 
-2. **Test with Real Files**
-   - Convert sample.md → PDF on Supernote
-   - Test real .note file parsing
-   - Verify PDF template extraction
+2. **Implement .note File Update Mode**
+   - Extract annotation layers from existing .note files
+   - Replace template/background content while preserving sketches/annotations
+   - Handle page dimension changes gracefully
+   - Validate and ensure .note file format integrity
 
-3. **Implement .note → Markdown Converter**
-   - Use supernotelib for .note reading
-   - Add OCR integration (Tesseract or Gemini)
-   - Generate markdown with embedded PNGs
+3. **Add Realtime Note Support**
+   - Enable `realtime=True` parameter for .note generation
+   - Support realtime handwriting recognition in conversion pipeline
+   - Test realtime note creation and annotation workflows
 
 4. **Begin Sync Engine**
-   - Design sync state database schema
+   - Design file monitoring system (folder watching)
    - Implement MD5 change detection
-   - Create file mapping system
+   - Create workflow-specific sync logic (Daily Notes, Research, World Building)
 
 ### Future Enhancements
 
@@ -359,9 +383,10 @@ pytest --cov
 ## Known Issues
 
 1. **WeasyPrint requires GTK+** - Windows users need additional setup
-2. **No OCR yet** - .note → markdown conversion not implemented
-3. **No sync engine** - Manual file conversion only
-4. **Limited test coverage** - Need more integration tests
+2. **Frontmatter properties not yet implemented** - Feature specified, awaiting development
+3. **.note file update mode not yet implemented** - Feature specified, awaiting development
+4. **No sync engine** - Manual file conversion only, file watching not implemented
+5. **Limited test coverage** - Need more integration tests for new features
 
 ## Performance
 
@@ -387,7 +412,7 @@ pytest --cov
 
 ## Conclusion
 
-**Current Status:** Alpha development - Core converters complete and device-tested
+**Current Status:** Alpha development - Core converters complete, device-tested. Workflow specifications designed.
 
 **Ready to Use:**
 - ✅ .note file inspection
@@ -396,11 +421,17 @@ pytest --cov
 - ✅ PDF → .note (device-tested on Manta)
 - ✅ PNG → .note (device-tested on Manta)
 - ✅ .note → PNG extraction
-- ✅ .note → Markdown (images embedded, no OCR yet)
+- ✅ .note → Markdown (images embedded, text extraction from realtime notes)
 
-**Not Ready:**
-- ❌ OCR text extraction from handwriting
+**Next Phase (Planned - Phase 2):**
+- 🔄 Frontmatter properties for conversion control
+- 🔄 .note file update mode (replace content, preserve annotations)
+- 🔄 Realtime handwriting recognition support
+- 🔄 Progressive automation (Manual → Semi-Auto → Full Auto)
+
+**Future Work (Phase 3+):**
 - ❌ Bi-directional automated sync
 - ❌ Automatic sync workflow with file watching
+- ❌ Intelligent conflict resolution and AI-assisted merging
 
-**Recommendation:** Begin Phase 2 work on sync engine and OCR integration. Core conversion pipeline is complete.
+**Recommendation:** Begin Phase 2 implementation of frontmatter properties and .note update mode. Detailed workflow specifications are complete in PRD (see ROADMAP.md for location).

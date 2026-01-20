@@ -1,8 +1,15 @@
 # Obsidian-Supernote Sync Roadmap
 
-**Last Updated:** 2026-01-19
-**Status:** Phase 3 In Progress - Core Converters Complete
+**Last Updated:** 2026-01-20
+**Status:** Phase 3 In Progress - Core Converters Complete, Workflow Automation Planned
 **PRD Location:** `C:\Edwin\Notes Vault\03 Projects\Obsidian-Supernote Sync\Obsidian-Supernote Sync Tool.md`
+
+## Recent Additions (2026-01-20)
+
+- ✨ Frontmatter properties for .note type control (`supernote_type`, `supernote_linked_file`)
+- ✨ .note file update mode (replace template while preserving annotations/sketches)
+- ✨ Realtime note type support for annotation workflows (Research Notes)
+- ✨ Progressive automation levels for each workflow (Manual → Semi-Auto → Full Automation)
 
 ## Phase Mapping
 
