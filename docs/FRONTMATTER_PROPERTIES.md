@@ -4,13 +4,32 @@
 
 ## Overview
 
-Supernote conversion properties are optional YAML frontmatter fields in Obsidian markdown files that control how the CLI tool converts and manages .note files. All properties are optional and have sensible defaults.
+Supernote conversion properties are optional YAML frontmatter fields in Obsidian markdown files that control how the CLI tool converts .note files. These properties capture **content-level metadata only** — device-specific settings (page size, device type, versioning) are handled by the synchronization software configuration, not by note properties.
+
+All properties are optional and have sensible defaults.
+
+---
+
+## Architecture Rationale
+
+**Why only 2 properties in notes, not 6?**
+
+Obsidian notes should be **generic and device-agnostic**. A single note should work with multiple devices and sync configurations. Device-specific settings belong in the **sync software configuration**, not in the note metadata.
+
+| Setting | In Frontmatter? | Configured By | Reason |
+|---------|---|---|---|
+| Note Type (standard/realtime) | ✅ YES | Note frontmatter | Content property - the note defines if it has text |
+| Linked File (path to update) | ⚠️ MAYBE | Note frontmatter | Useful for Obsidian workflows, but potentially optional |
+| Device Type (A5X, A5X2, etc.) | ❌ NO | Sync software config | Device-specific, changes per user |
+| Page Size (A4, A5, A6) | ❌ NO | Sync software config | Device-dependent, sync software handles |
+| Versioning (_v2, _v3) | ❌ NO | Sync software config | Sync strategy, not content property |
+| Realtime Flag | ❌ NO | Duplicate of type | Redundant with supernote.type |
 
 ---
 
 ## Frontmatter Properties Specification
 
-### 1. `supernote_type`
+### 1. `supernote.type`
 
 **Type:** String (enumeration)
 **Valid Values:** `"standard"` | `"realtime"`
@@ -19,7 +38,7 @@ Supernote conversion properties are optional YAML frontmatter fields in Obsidian
 **Workflow Use:** All workflows
 
 **Description:**
-Specifies whether the generated .note file should support realtime handwriting recognition.
+Specifies whether the generated .note file should support realtime handwriting recognition. This is a **content property** because it describes the nature of the note itself.
 
 **Values:**
 - **`"standard"`**: No text recognition. Template shows as static background. User handwrites on top. Useful for sketching, highlighting, pure visual markup.
@@ -34,13 +53,13 @@ Specifies whether the generated .note file should support realtime handwriting r
 
 ```yaml
 # Daily Notes - should use realtime to capture handwritten text
-supernote_type: realtime
+supernote.type: realtime
 
 # Research Notes - should use realtime for annotations with text content
-supernote_type: realtime
+supernote.type: realtime
 
 # World Building - should use standard for pure sketching
-supernote_type: standard
+supernote.type: standard
 ```
 
 **Implementation Checklist:**
@@ -53,22 +72,23 @@ supernote_type: standard
 
 ---
 
-### 2. `supernote_linked_file`
+### 2. `supernote.file` (Optional)
 
 **Type:** String (file path)
 **Valid Values:** Relative or absolute path to existing .note file
 **Default:** None (creates new file)
-**Required:** No
-**Workflow Use:** Research Notes, World Building
+**Required:** No (uncertain if truly needed)
+**Workflow Use:** Research Notes, World Building (when updating)
 
 **Description:**
-Specifies an existing .note file to update instead of creating a new one. When specified, the conversion will replace the template/background content while preserving all handwritten annotations and sketches.
+*Optional/Uncertain:* Specifies an existing .note file to update instead of creating a new one. When specified, the conversion will replace the template/background content while preserving all handwritten annotations and sketches.
+
+This property may not be essential if the sync software handles linked file determination differently.
 
 **Path Format:**
 - Relative paths are relative to vault root: `"Reading/Article.note"`
 - Relative paths with backslashes work: `"Characters/Aragorn.note"`
 - Absolute paths supported: `"C:/Edwin/Notes/article.note"`
-- Can be single file or pattern (Phase 3+)
 
 **Impact on Conversion:**
 - Triggers "update mode" instead of "create mode"
@@ -82,15 +102,10 @@ Specifies an existing .note file to update instead of creating a new one. When s
 
 ```yaml
 # Update existing research note when article is revised
-supernote_linked_file: "Reading/DeepLearning_2026.note"
+supernote.file: "Reading/DeepLearning_2026.note"
 
 # Update character profile keeping sketches
-supernote_linked_file: "Characters/Aragorn.note"
-
-# Update with version suffix (see supernote_version)
-supernote_linked_file: "Characters/Aragorn.note"
-supernote_version: 2
-# Result: Creates Characters/Aragorn_v2.note instead of updating original
+supernote.file: "Characters/Aragorn.note"
 ```
 
 **Behavior:**
@@ -110,268 +125,61 @@ supernote_version: 2
 
 ---
 
-### 3. `supernote_device`
-
-**Type:** String (enumeration)
-**Valid Values:** `"A5X"` | `"A5X2"` | `"A6X"` | `"A6X2"`
-**Default:** `"A5X2"` (Manta - most common)
-**Required:** No
-**Workflow Use:** All workflows
-
-**Description:**
-Specifies which Supernote device this note is for. Different devices have different screen resolutions and optimal page sizes.
-
-**Device Information:**
-| Device | Model | Resolution | DPI | Page Size |
-|--------|-------|------------|-----|-----------|
-| A5X | - | 1404 x 1872 | 226 | A5 |
-| A5X2 | Manta | 1920 x 2560 | 300 | A5 |
-| A6X | - | 1404 x 1872 | 300 | A6 |
-| A6X2 | Nomad | 1404 x 1872 | 300 | A6 |
-
-**Impact on Conversion:**
-- Determines optimal resolution for PDF rendering
-- Sets device equipment code in .note metadata
-- Affects DPI (affects text sharpness)
-- Used for validation (page size appropriateness)
-
-**Examples:**
-
-```yaml
-# For Manta (A5X2) - most common
-supernote_device: A5X2
-
-# For Nomad (A6X2)
-supernote_device: A6X2
-
-# For older A5X
-supernote_device: A5X
-```
-
-**Implementation Checklist:**
-- [ ] Read device from frontmatter
-- [ ] Default to "A5X2" if not specified
-- [ ] Validate device is one of four valid options
-- [ ] Warn if invalid device specified
-- [ ] Look up DPI and resolution for device
-- [ ] Pass to PDF→.note converter
-- [ ] Use in .note metadata generation
-
----
-
-### 4. `supernote_page_size`
-
-**Type:** String (enumeration)
-**Valid Values:** `"A4"` | `"A5"` | `"A6"` | `"Letter"`
-**Default:** `"A5"` (most common)
-**Required:** No
-**Workflow Use:** All workflows, especially World Building (uses A5)
-
-**Description:**
-Specifies the page size for PDF generation before conversion to .note. This affects the layout and text size in the final .note file.
-
-**Page Size Information:**
-| Size | Width | Height | Use Case |
-|------|-------|--------|----------|
-| A4 | 210mm | 297mm | Large documents, detailed layouts |
-| A5 | 148mm | 210mm | Default, good for character profiles |
-| A6 | 105mm | 148mm | Small, compact notes |
-| Letter | 8.5" | 11" | US standard |
-
-**Impact on Conversion:**
-- Controls PDF page dimensions
-- Affects font size relative to page
-- Affects how content is laid out
-- Should match device's viewing preference
-
-**Examples:**
-
-```yaml
-# Character profiles - use A5 for compact view
-supernote_page_size: A5
-
-# Detailed research articles - use A4 for more space
-supernote_page_size: A4
-
-# Small notes - use A6
-supernote_page_size: A6
-
-# US users - use Letter
-supernote_page_size: Letter
-```
-
-**Implementation Checklist:**
-- [ ] Read page size from frontmatter
-- [ ] Default to "A5" if not specified
-- [ ] Validate page size is one of four valid options
-- [ ] Warn if invalid size specified
-- [ ] Pass to Markdown→PDF converter
-- [ ] Validate against device (warn if mismatched)
-
----
-
-### 5. `supernote_realtime`
-
-**Type:** Boolean
-**Valid Values:** `true` | `false`
-**Default:** Depends on `supernote_type` (realtime=true if type is "realtime", false otherwise)
-**Required:** No
-**Workflow Use:** Research Notes, Daily Notes
-
-**Description:**
-Explicitly controls whether realtime character recognition is enabled. Redundant with `supernote_type` but provided for clarity when mixing standard/realtime.
-
-**Impact on Conversion:**
-- Redundant with `supernote_type: realtime`
-- If both specified, this overrides `supernote_type`
-- Sets recognition metadata in .note file
-
-**Examples:**
-
-```yaml
-# Explicit realtime setting
-supernote_realtime: true
-
-# This is equivalent to:
-supernote_type: realtime
-```
-
-**Implementation Checklist:**
-- [ ] Read realtime boolean from frontmatter
-- [ ] If both supernote_type and supernote_realtime specified, supernote_realtime wins
-- [ ] Validate value is boolean (true/false)
-- [ ] Warn if non-boolean value (e.g., "yes", "enabled")
-- [ ] Pass to converter as recognition flag
-
----
-
-### 6. `supernote_version`
-
-**Type:** Integer
-**Valid Values:** Any positive integer (1, 2, 3, ...)
-**Default:** None (overwrites original)
-**Required:** No (only used with `supernote_linked_file`)
-**Workflow Use:** Research Notes, World Building (multi-iteration scenarios)
-
-**Description:**
-When updating an existing .note file, optionally create a versioned copy instead of overwriting. The version number is appended to the filename.
-
-**Behavior:**
-- Only applies when `supernote_linked_file` is specified
-- Ignored if no linked file (creates new file normally)
-- Appends `_v{number}` to filename before `.note` extension
-- Preserves original file untouched
-
-**Examples:**
-
-```yaml
-supernote_linked_file: "Characters/Aragorn.note"
-supernote_version: 2
-# Result: Creates "Characters/Aragorn_v2.note"
-# Original "Characters/Aragorn.note" unchanged
-
-supernote_linked_file: "Reading/Article.note"
-supernote_version: 3
-# Result: Creates "Reading/Article_v3.note"
-```
-
-**Use Cases:**
-- **Iteration tracking**: Keep versions as character evolves
-- **Comparison**: Side-by-side comparison of different versions
-- **Recovery**: Original always available if needed
-- **History**: Track multiple sketching sessions
-
-**Implementation Checklist:**
-- [ ] Read version number from frontmatter
-- [ ] Only apply if `supernote_linked_file` is specified
-- [ ] Validate version is positive integer
-- [ ] Warn if version is 0 or negative
-- [ ] Append `_v{number}` to output filename
-- [ ] Don't overwrite if version specified
-- [ ] Test filename generation
-
----
-
 ## Defaults Summary
 
 | Property | Default | Condition |
 |----------|---------|-----------|
-| `supernote_type` | `"standard"` | Always |
-| `supernote_linked_file` | None | None |
-| `supernote_device` | `"A5X2"` | Always |
-| `supernote_page_size` | `"A5"` | Always |
-| `supernote_realtime` | From `supernote_type` | If not specified |
-| `supernote_version` | None | Only if `supernote_linked_file` present |
+| `supernote.type` | `"standard"` | Always |
+| `supernote.file` | None | None (optional feature) |
 
 ---
 
 ## Validation Rules
 
-### Priority & Conflicts
+### Properties to Validate
 
-1. **Frontmatter properties take precedence over CLI flags**
-   ```bash
-   # Command: --device A6X2
-   # Frontmatter: supernote_device: A5X2
-   # Result: Uses A5X2 (frontmatter wins)
-   ```
+1. **`supernote.type`**
+   - Must be either `"standard"` or `"realtime"`
+   - If missing: use default `"standard"`
+   - If invalid: log warning, use default
 
-2. **supernote_realtime overrides supernote_type**
-   ```yaml
-   supernote_type: standard
-   supernote_realtime: true
-   # Result: Uses realtime (explicit supernote_realtime wins)
-   ```
-
-3. **supernote_version only applies with supernote_linked_file**
-   ```yaml
-   supernote_version: 2
-   # (no supernote_linked_file)
-   # Result: Ignored, creates new file normally
-   ```
+2. **`supernote.file`** (if present)
+   - Must be valid path to existing .note file
+   - If missing: create new file (normal behavior)
+   - If invalid path: log warning, create new file
+   - Optional - only validate if property is specified
 
 ### Error Handling
 
 **Invalid Values:**
 ```yaml
-# Invalid supernote_type
-supernote_type: "recognition"  # ERROR: not "standard" or "realtime"
+# Invalid supernote.type
+supernote.type: "recognition"  # ERROR: not "standard" or "realtime"
 # Action: Log error, use default "standard", continue
 
-# Invalid device
-supernote_device: "A5"  # ERROR: not one of four valid devices
-# Action: Log error, use default "A5X2", continue
+# Missing supernote.file (not an error, just optional)
+# Action: Create new .note file (normal behavior)
 
-# Non-boolean realtime
-supernote_realtime: yes  # ERROR: not boolean true/false
-# Action: Log error, interpret as string, skip, use type-based default
-```
-
-**Missing Files:**
-```yaml
-supernote_linked_file: "NonExistent/File.note"
+# Invalid supernote.file path
+supernote.file: "NonExistent/File.note"
 # Action: Log warning, create new file instead of updating
 ```
 
 **Validation Checklist:**
 - [ ] All properties are optional
-- [ ] Missing properties use defaults
+- [ ] Missing properties use defaults or enable default behavior
 - [ ] Invalid values log warnings but don't crash
-- [ ] Frontmatter properties override CLI flags
 - [ ] Provide helpful error messages
+- [ ] Device/page_size/version handled by sync software (not validated here)
 
 ---
 
 ## Implementation Summary
 
-### Properties to Parse (6 total)
+### Properties to Parse (2 total)
 
-1. ✅ `supernote_type` - Type of note (standard/realtime)
-2. ✅ `supernote_linked_file` - Path to existing .note to update
-3. ✅ `supernote_device` - Device type (A5X, A5X2, A6X, A6X2)
-4. ✅ `supernote_page_size` - Page size (A4, A5, A6, Letter)
-5. ✅ `supernote_realtime` - Explicit realtime flag (boolean)
-6. ✅ `supernote_version` - Version suffix for updates (integer)
+1. ✅ `supernote.type` - Type of note (standard/realtime) — **CONTENT PROPERTY**
+2. ⚠️ `supernote.file` - Path to existing .note to update — **OPTIONAL/UNCERTAIN**
 
 ### Code Changes Needed
 
@@ -382,10 +190,8 @@ supernote_linked_file: "NonExistent/File.note"
 - [ ] Add logging for property reads/validation
 
 **File: `obsidian_supernote/converters/note_writer.py`**
-- [ ] Handle `supernote_type` parameter
-- [ ] Handle `supernote_realtime` parameter
-- [ ] Handle `supernote_device` parameter
-- [ ] Handle `supernote_version` in filename generation
+- [ ] Handle `supernote.type` parameter
+- [ ] Handle `supernote.file` parameter
 
 **File: `obsidian_supernote/cli.py`**
 - [ ] Read markdown file and extract frontmatter
@@ -398,48 +204,48 @@ supernote_linked_file: "NonExistent/File.note"
 - [ ] Handle missing properties (use defaults)
 - [ ] Validate property values
 - [ ] Warn on invalid values
-- [ ] Property precedence (frontmatter > CLI)
 - [ ] Examples from each workflow
 
 ---
 
 ## Workflow-Specific Property Usage
 
-### Workflow 1: Daily Notes (Level 1: Manual)
+### Workflow 1: Daily Notes (Realtime + Update)
 
 ```yaml
 ---
 title: "Daily Notes 2026-01-20"
 created: 2026-01-20
-supernote_type: realtime           # Capture handwritten text
-supernote_linked_file: "Journal/2026-01-20.note"  # Update daily note
+supernote.type: realtime
+supernote.file: "Journal/2026-01-20.note"
 ---
 ```
 
-**Properties Used:** `supernote_type`, `supernote_linked_file`
-**Expected:** Realtime note, update mode enabled
+**Properties Used:** `supernote.type`, `supernote.file`
+**Expected:** Realtime note with update mode enabled
+**Note:** Device, page size handled by sync software configuration
 
 ---
 
-### Workflow 2: Research Notes (Level 1: Manual)
+### Workflow 2: Research Notes (Realtime + Update)
 
 ```yaml
 ---
 title: "Deep Learning Advances in 2026"
 author: "LeCun & Hinton"
-date: 2026-01-15
 tags: [research, ai, to-supernote]
-supernote_type: realtime              # Annotations with text recognition
-supernote_linked_file: "Reading/DeepLearning_2026.note"  # Update if exists
+supernote.type: realtime
+supernote.file: "Reading/DeepLearning_2026.note"
 ---
 ```
 
-**Properties Used:** `supernote_type`, `supernote_linked_file`
-**Expected:** Realtime note, update mode enabled
+**Properties Used:** `supernote.type`, `supernote.file`
+**Expected:** Realtime note with update mode enabled
+**Note:** Device, page size handled by sync software configuration
 
 ---
 
-### Workflow 3: World Building (Level 1: Manual)
+### Workflow 3: World Building (Standard, Optional Update)
 
 ```yaml
 ---
@@ -447,16 +253,14 @@ title: "Aragorn - Ranger King"
 aliases: ["Strider"]
 tags: [characters, worldbuilding, fantasy]
 created: 2026-01-10
-supernote_type: standard              # Standard (sketching, not text)
-supernote_device: A5X2
-supernote_page_size: A5               # Smaller for profiles
-supernote_linked_file: "Characters/Aragorn.note"  # Update if exists
-supernote_version: 2                  # Create v2 instead of overwriting
+supernote.type: standard
+supernote.file: "Characters/Aragorn.note"
 ---
 ```
 
-**Properties Used:** All six properties
-**Expected:** Standard note, A5 page size, A5X2 device, update to v2
+**Properties Used:** `supernote.type`, `supernote.file`
+**Expected:** Standard note (sketching) with update mode enabled
+**Note:** Device/page size and versioning handled by sync software configuration
 
 ---
 
@@ -467,8 +271,8 @@ supernote_version: 2                  # Create v2 instead of overwriting
 ```yaml
 ---
 title: "Daily Notes 2026-01-20"
-supernote_type: realtime
-supernote_linked_file: "Journal/2026-01-20.note"
+supernote.type: realtime
+supernote.file: "Journal/2026-01-20.note"
 ---
 
 Today's tasks:
@@ -478,16 +282,14 @@ Today's tasks:
 ```
 
 **Expected Behavior:**
-- Reads `supernote_type: realtime`
-- Reads `supernote_linked_file: "Journal/2026-01-20.note"`
-- Device: A5X2 (default)
-- Page size: A5 (default)
-- Conversion mode: UPDATE (because supernote_linked_file specified)
+- Reads `supernote.type: realtime`
+- Reads `supernote.file: "Journal/2026-01-20.note"`
+- Conversion mode: UPDATE (because supernote.file specified)
 - Recognition enabled: YES (because realtime)
 
 **Command:**
 ```bash
-obsidian-supernote md-to-note "2026-01-20.md" "2026-01-20.note"
+obsidian-supernote md-to-note "2026-01-20.md"
 ```
 
 **Result:**
@@ -498,16 +300,13 @@ obsidian-supernote md-to-note "2026-01-20.md" "2026-01-20.note"
 
 ---
 
-### Example 2: Research Article with Version
+### Example 2: Research Article
 
 ```yaml
 ---
 title: "Machine Learning Survey"
-supernote_type: realtime
-supernote_device: A5X
-supernote_page_size: A4
-supernote_linked_file: "Reading/ML_Survey.note"
-supernote_version: 3
+supernote.type: realtime
+supernote.file: "Reading/ML_Survey.note"
 ---
 
 # Survey Overview
@@ -516,10 +315,8 @@ Key concepts in modern ML...
 ```
 
 **Expected Behavior:**
-- Device: A5X (specified)
-- Page size: A4 (specified)
-- Realtime: YES
-- Version: 3 (creates v3 instead of overwriting)
+- Type: Realtime
+- File: Reading/ML_Survey.note
 
 **Command:**
 ```bash
@@ -527,23 +324,18 @@ obsidian-supernote md-to-note "ml_survey.md"
 ```
 
 **Result:**
-- Creates "Reading/ML_Survey_v3.note" (new file, doesn't overwrite original)
-- Uses A5X device settings
-- Uses A4 page size
+- Updates "Reading/ML_Survey.note" (if exists) or creates new
 - Realtime recognition enabled
 
 ---
 
-### Example 3: World Building with All Properties
+### Example 3: World Building with Standard Type
 
 ```yaml
 ---
 title: "Aragorn - Character Profile"
-supernote_type: standard
-supernote_device: A5X2
-supernote_page_size: A5
-supernote_linked_file: "Characters/Aragorn.note"
-supernote_version: 2
+supernote.type: standard
+supernote.file: "Characters/Aragorn.note"
 ---
 
 # Ranger King
@@ -555,10 +347,7 @@ Physical Description:
 
 **Expected Behavior:**
 - Type: Standard (no text recognition)
-- Device: A5X2 (Manta)
-- Page size: A5 (compact)
-- Update to: Characters/Aragorn_v2.note
-- Preserve original sketches
+- File: Characters/Aragorn.note
 
 **Command:**
 ```bash
@@ -566,11 +355,8 @@ obsidian-supernote md-to-note "aragorn.md"
 ```
 
 **Result:**
-- Creates Characters/Aragorn_v2.note
-- Profile displayed on A5 page size
-- Original Aragorn.note unchanged
-- All original sketches preserved
-- New description visible in v2
+- Updates Characters/Aragorn.note (if exists) or creates new
+- Standard type (no recognition)
 
 ---
 
@@ -585,35 +371,28 @@ title: "My Note"
 # Daily Notes (realtime, update)
 ---
 title: "Daily Notes 2026-01-20"
-supernote_type: realtime
-supernote_linked_file: "Journal/2026-01-20.note"
+supernote.type: realtime
+supernote.file: "Journal/2026-01-20.note"
 ---
 
 # Research Notes (realtime, update)
 ---
 title: "Research Article"
-supernote_type: realtime
-supernote_linked_file: "Reading/Article.note"
+supernote.type: realtime
+supernote.file: "Reading/Article.note"
 ---
 
-# World Building (standard, version)
+# World Building (standard, no update)
 ---
-title: "Character"
-supernote_type: standard
-supernote_page_size: A5
-supernote_linked_file: "Characters/Character.note"
-supernote_version: 2
+title: "Character Profile"
+supernote.type: standard
 ---
 
-# Complex (all properties)
+# World Building (standard, with update)
 ---
-title: "Complete Example"
-supernote_type: realtime
-supernote_device: A5X2
-supernote_page_size: A5
-supernote_linked_file: "Path/To/File.note"
-supernote_realtime: true
-supernote_version: 2
+title: "Character Profile"
+supernote.type: standard
+supernote.file: "Characters/Character.note"
 ---
 ```
 
@@ -621,14 +400,16 @@ supernote_version: 2
 
 ## Summary
 
-**Step 1 Requirements:**
+**Step 1 Requirements (Simplified):**
 
-1. **Parse 6 frontmatter properties** from YAML
+1. **Parse 2 content-level properties** from YAML: `supernote.type` and `supernote.file`
 2. **Validate** each property against allowed values
 3. **Apply defaults** for missing properties
 4. **Handle errors** gracefully (warn but continue)
 5. **Pass to converters** with proper precedence
 6. **Test** with examples from each workflow
+
+**Device-specific settings** (device type, page size, versioning) are configured in the **sync software**, not in note frontmatter.
 
 **This document is the complete specification for Step 1 of Phase 2.**
 
