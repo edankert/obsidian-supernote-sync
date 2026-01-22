@@ -1,7 +1,7 @@
 # Obsidian-Supernote Sync Roadmap
 
 **Last Updated:** 2026-01-22
-**Status:** Step 1 Complete - Frontmatter Parsing Implemented
+**Status:** Steps 1 & 2 Complete - Full Update Workflow Implemented
 **PRD Location:** `C:\Edwin\Notes Vault\03 Projects\Obsidian-Supernote Sync\Obsidian-Supernote Sync Tool.md`
 
 ## Recent Additions (2026-01-22)
@@ -12,7 +12,11 @@
   - ✅ Automatic markdown update after conversion
   - ✅ New `md-to-note` CLI command
   - ✅ 34 comprehensive tests (100% passing, 92% coverage)
-- ⏳ .note file update mode (preserve annotations): Planned for Step 2
+- ✅ **Step 2 COMPLETE:** .note file update mode (preserve annotations)
+  - ✅ Automatic detection from `supernote.file` property
+  - ✅ Extract and preserve handwriting (ZIP archive)
+  - ✅ Replace template while keeping annotations
+  - ✅ End-to-end tested workflow
 - ✅ Realtime note type support for annotation workflows
 
 ## Phase Mapping
@@ -133,13 +137,15 @@ obsidian-supernote md-to-note "My Note.md" "output/My Note.note"
 - ✅ New `md-to-note` CLI command
 - ✅ 34 tests, 92% coverage
 
-#### Step 2: .note File Update Mode (NEXT)
+#### Step 2: .note File Update Mode ✅ COMPLETE (2026-01-22)
 
-**Planned:**
-- Read existing .note file when `supernote.file` is present
-- Extract and preserve annotation layers
-- Replace template/background only
-- Maintain handwriting and sketches
+**Implemented:**
+- ✅ Read existing .note file when `supernote.file` is present
+- ✅ Extract and preserve annotation layers (ZIP archive)
+- ✅ Replace template/background only
+- ✅ Maintain handwriting and sketches
+- ✅ Automatic update mode detection
+- ✅ Graceful fallback when no handwriting exists
 
 #### Step 2.1: Obsidian → Supernote Workflow (Alternative)
 

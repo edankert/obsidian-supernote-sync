@@ -211,7 +211,43 @@ obsidian-supernote md-to-note daily.md output/daily.note
 obsidian-supernote md-to-note daily.md output.note --no-update-markdown
 ```
 
-**Pending:** .note file update mode (preserve annotations while replacing template)
+### 6. .note File Update Mode ✅ (Complete)
+
+**Status:** ✅ IMPLEMENTED (v0.2.0-alpha)
+
+**Implemented Features:**
+- ✅ Automatic update mode detection from `supernote.file` property
+- ✅ Extract handwriting data (ZIP archive) from existing .note files
+- ✅ Preserve all handwriting layers while replacing template/background
+- ✅ Graceful fallback when no handwriting data exists
+- ✅ End-to-end tested with markdown → .note → update workflow
+
+**How It Works:**
+
+**First Conversion:**
+```bash
+obsidian-supernote md-to-note daily.md output/daily.note
+# Creates new .note file
+# Markdown updated: supernote.file: "[output/daily.note]"
+```
+
+**After Adding Handwriting on Device:**
+```bash
+# Edit markdown, then run same command
+obsidian-supernote md-to-note daily.md output/daily.note
+
+# Output:
+# "Update mode: Found existing .note file"
+# "Using UPDATE mode - preserving handwriting annotations"
+# "Handwriting data: 45231 bytes, Has content: True"
+# "Update complete - handwriting preserved!"
+```
+
+**Technical Implementation:**
+- `NoteFileParser.get_zip_archive()` - Extracts handwriting data
+- `NoteFileWriter.update_note_file()` - Orchestrates update workflow
+- `NoteFileWriter._write_note_file_with_zip()` - Writes .note with preserved ZIP
+- Automatic detection in `convert_markdown_to_note()`
 
 ### 6. Text Extraction from Device Recognition ⚠️ (Planned)
 

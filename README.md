@@ -14,6 +14,7 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 - **Markdown → .note**: Convert Obsidian markdown directly to Supernote .note files (via Pandoc)
   - ✨ **NEW:** Frontmatter support for `supernote.type` (standard/realtime)
   - ✨ **NEW:** Auto-updates markdown with `supernote.file` reference using [x.note] notation
+  - ✨ **NEW:** Update mode - preserves handwriting when editing markdown and reconverting
 - **Markdown → PDF**: Convert Obsidian markdown to Supernote-optimized PDFs (via Pandoc)
 - **PDF → .note**: Convert PDFs to annotatable Supernote .note files (device-tested)
 - **PNG → .note**: Convert PNG templates to .note files (device-tested)
@@ -84,6 +85,25 @@ title: "My Daily Note"
 supernote.type: realtime
 supernote.file: "[output/my-note.note]"  # Auto-added
 ---
+```
+
+### Update Workflow - Preserve Handwriting
+
+The tool automatically detects when you're updating an existing .note file:
+
+1. **First conversion:** Creates new .note, adds `supernote.file` to markdown
+2. **Add handwriting:** Write on your Supernote device
+3. **Edit markdown:** Update text content in Obsidian
+4. **Reconvert:** Run same command → **handwriting is automatically preserved!**
+
+```bash
+# Edit markdown content
+obsidian-supernote md-to-note daily.md output/daily.note
+
+# Output shows:
+# "Update mode: Found existing .note file"
+# "Preserving handwriting from 2 pages"
+# "Update complete - handwriting preserved!"
 ```
 
 ## Project Structure
