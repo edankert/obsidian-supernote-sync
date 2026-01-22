@@ -10,7 +10,10 @@ from rich import print as rprint
 
 from obsidian_supernote import __version__
 from obsidian_supernote.converters.pandoc_converter import PandocConverter
-from obsidian_supernote.converters.note_writer import NoteFileWriter
+from obsidian_supernote.converters.note_writer import (
+    NoteFileWriter,
+    convert_markdown_to_note,
+)
 from obsidian_supernote.converters.note_to_obsidian import NoteToObsidianConverter
 from obsidian_supernote.converters import WEASYPRINT_AVAILABLE
 from obsidian_supernote.parsers.note_parser import NoteFileParser
@@ -167,6 +170,120 @@ def pdf_to_note(
         console.print(f"  1. Copy the .note file to your Supernote's Note folder")
         console.print(f"  2. Open in Supernote and add annotations!")
 
+    except Exception as e:
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
+        import traceback
+        console.print(traceback.format_exc())
+        raise click.Abort()
+
+
+@main.command()
+@click.argument("input_file", type=click.Path(exists=True))
+@click.argument("output_file", type=click.Path())
+@click.option("--device", default="A5X2", help="Target Supernote device (A5X, A5X2/Manta, A6X, A6X2/Nomad)")
+@click.option("--language", default="en_GB", help="Recognition language (en_GB, en_US, etc.)")
+@click.option("--page-size", default="A5", help="PDF page size (A4, A5, A6, Letter)")
+@click.option("--margin", default="2cm", help="Page margins (e.g., 2cm, 1in)")
+@click.option("--font-size", default=11, help="Base font size in points")
+@click.option("--realtime/--no-realtime", default=None, help="Force realtime mode (overrides frontmatter)")
+@click.option("--no-frontmatter", is_flag=True, help="Ignore frontmatter properties")
+@click.option("--no-update-markdown", is_flag=True, help="Don't update markdown with .note file reference")
+def md_to_note(
+    input_file: str,
+    output_file: str,
+    device: str,
+    language: str,
+    page_size: str,
+    margin: str,
+    font_size: int,
+    realtime: bool | None,
+    no_frontmatter: bool,
+    no_update_markdown: bool,
+) -> None:
+    """Convert Markdown file directly to Supernote .note format.
+
+    This command reads frontmatter properties from the markdown file:
+    - supernote.type: "standard" or "realtime" (default: standard)
+    - supernote.file: Path to existing .note (update mode, not yet implemented)
+
+    Example frontmatter:
+        ---
+        title: My Daily Note
+        supernote.type: realtime
+        ---
+
+    Arguments:
+        INPUT_FILE: Path to markdown file
+        OUTPUT_FILE: Path to output .note file
+    """
+    try:
+        input_path = Path(input_file)
+        output_path = Path(output_file)
+
+        # Ensure output has .note extension
+        if output_path.suffix.lower() != ".note":
+            output_path = output_path.with_suffix(".note")
+
+        console.print(f"[bold blue]Converting Markdown to Supernote .note[/bold blue]")
+        console.print(f"  Input:      {input_path}")
+        console.print(f"  Output:     {output_path}")
+        console.print(f"  Device:     {device}")
+        console.print(f"  Language:   {language}")
+        console.print(f"  Page size:  {page_size}")
+        console.print(f"  Margin:     {margin}")
+        console.print(f"  Font size:  {font_size}pt")
+
+        use_frontmatter = not no_frontmatter
+        if not use_frontmatter:
+            console.print(f"  [yellow]Frontmatter: Disabled[/yellow]")
+
+        if realtime is not None:
+            console.print(f"  Realtime:   {realtime} (explicit override)")
+        elif use_frontmatter:
+            console.print(f"  Realtime:   From frontmatter (if present)")
+        else:
+            console.print(f"  Realtime:   False (default)")
+
+        with console.status("[bold green]Converting Markdown to .note...", spinner="dots"):
+            convert_markdown_to_note(
+                markdown_path=input_path,
+                output_path=output_path,
+                device=device,
+                language=language,
+                realtime=realtime,
+                page_size=page_size,
+                margin=margin,
+                font_size=font_size,
+                use_frontmatter=use_frontmatter,
+                update_markdown=not no_update_markdown,
+            )
+
+        # Get file size
+        size_mb = output_path.stat().st_size / (1024 * 1024)
+
+        console.print(f"\n[bold green]SUCCESS![/bold green]")
+        console.print(f"  Generated: {output_path}")
+        console.print(f"  Size: {size_mb:.2f} MB")
+
+        if not no_update_markdown:
+            console.print(f"  [green]+[/green] Updated markdown with file reference")
+
+        console.print(f"\n[cyan]Next steps:[/cyan]")
+        console.print(f"  1. Copy the .note file to your Supernote's Note folder")
+        console.print(f"  2. Open in Supernote and add handwritten notes!")
+
+        if not no_update_markdown:
+            console.print(f"  3. Edit markdown and re-run to update .note (preserves handwriting)")
+
+    except RuntimeError as e:
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
+        if "Pandoc is not installed" in str(e):
+            console.print("\n[cyan]Installation:[/cyan]")
+            console.print("  Windows: choco install pandoc")
+            console.print("  Mac:     brew install pandoc")
+            console.print("  Linux:   apt install pandoc")
+            console.print("  Or:      https://pandoc.org/installing.html")
+        raise click.Abort()
     except Exception as e:
         console.print(f"[bold red]ERROR:[/bold red] {e}")
         import traceback

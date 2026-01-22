@@ -10,12 +10,17 @@ import tempfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import fitz  # PyMuPDF
 from PIL import Image
 
 from obsidian_supernote.converters.pandoc_converter import PandocConverter
+from obsidian_supernote.utils.frontmatter import (
+    read_markdown_with_frontmatter,
+    update_frontmatter_file_reference,
+)
+from obsidian_supernote.parsers.note_parser import NoteFileParser
 
 
 class NoteFileWriter:
@@ -139,6 +144,89 @@ class NoteFileWriter:
             page_md5s,
             realtime=realtime,
         )
+
+    def update_note_file(
+        self,
+        existing_note_path: Path,
+        pdf_path: Path,
+        output_path: Path,
+        dpi: int | None = None,
+        realtime: bool = False,
+    ) -> None:
+        """Update an existing .note file with new template while preserving handwriting.
+
+        This reads an existing .note file, extracts the handwriting layers (ZIP archive),
+        generates a new template from the PDF, and reassembles the .note file with
+        the new template but preserved handwriting annotations.
+
+        Args:
+            existing_note_path: Path to existing .note file with handwriting
+            pdf_path: Path to new PDF template
+            output_path: Path to write updated .note file
+            dpi: DPI for rendering PDF pages (defaults to device native DPI)
+            realtime: Enable realtime handwriting recognition mode
+
+        Raises:
+            FileNotFoundError: If existing .note file doesn't exist
+            ValueError: If existing .note file is invalid or can't be parsed
+        """
+        existing_note_path = Path(existing_note_path)
+        pdf_path = Path(pdf_path)
+        output_path = Path(output_path)
+
+        # Validate existing .note file exists
+        if not existing_note_path.exists():
+            raise FileNotFoundError(
+                f"Existing .note file not found: {existing_note_path}"
+            )
+
+        # Parse existing .note file to extract handwriting
+        print(f"Reading existing .note file: {existing_note_path}")
+        parser = NoteFileParser(existing_note_path)
+        parser.parse()
+
+        # Extract ZIP archive (contains all handwriting data)
+        zip_archive = parser.get_zip_archive()
+        has_handwriting = parser.get_summary()["has_handwriting"]
+
+        if not zip_archive:
+            print("Warning: No handwriting data found in existing .note file")
+            print("Creating new .note file instead of updating")
+            # Fall back to regular conversion if no handwriting to preserve
+            self.convert_pdf_to_note(pdf_path, output_path, dpi, realtime)
+            return
+
+        print(f"Handwriting data: {len(zip_archive)} bytes, Has content: {has_handwriting}")
+
+        # Use device native DPI if not specified
+        render_dpi = dpi if dpi is not None else self.native_dpi
+
+        # Generate new PNG templates from updated PDF
+        print(f"Generating new template from: {pdf_path}")
+        png_pages = self._convert_pdf_to_pngs(pdf_path, render_dpi)
+
+        # Calculate PDF metadata
+        pdf_data = pdf_path.read_bytes()
+        pdf_md5 = hashlib.md5(pdf_data).hexdigest()
+        pdf_size = len(pdf_data)
+        page_md5s = [hashlib.md5(png).hexdigest() for png in png_pages]
+        pdf_md5_to_use = page_md5s[-1] if page_md5s else pdf_md5
+
+        # Write updated .note file with new templates + existing handwriting
+        print(f"Writing updated .note file: {output_path}")
+        print(f"Preserving handwriting from {len(parser.zip_contents.get('pages', {}))} pages")
+        self._write_note_file_with_zip(
+            output_path,
+            png_pages,
+            pdf_path.stem,
+            pdf_md5_to_use,
+            pdf_size,
+            page_md5s,
+            zip_archive,
+            realtime=realtime,
+        )
+
+        print("Update complete - handwriting preserved!")
 
     def convert_images_to_note(
         self,
@@ -488,6 +576,190 @@ class NoteFileWriter:
 
             # 12. Footer address (last 4 bytes)
             f.write(struct.pack("<I", footer_address))
+
+    def _write_note_file_with_zip(
+        self,
+        output_path: Path,
+        png_pages: List[bytes],
+        pdf_name: str,
+        pdf_md5: str,
+        pdf_size: int,
+        page_md5s: List[str],
+        zip_archive: bytes,
+        realtime: bool = False,
+    ) -> None:
+        """Write .note file with new templates but existing handwriting (ZIP archive).
+
+        This is used for update mode - replaces the template/background layers while
+        preserving all handwriting annotations from the existing .note file.
+
+        Args:
+            output_path: Path to output file
+            png_pages: List of PNG data (new templates to replace background)
+            pdf_name: Name of PDF (for metadata)
+            pdf_md5: MD5 hash of PDF
+            pdf_size: Size of PDF in bytes
+            page_md5s: MD5 hashes of each page
+            zip_archive: Existing ZIP archive containing handwriting data
+            realtime: Enable realtime handwriting recognition mode
+        """
+        # This is identical to _write_note_file except we append the ZIP archive
+        # at the end to preserve handwriting annotations
+
+        num_pages = len(png_pages)
+        file_id = self._generate_file_id()
+
+        # Build header content
+        header_content = self._build_header_content(file_id, realtime=realtime)
+        header_bytes = header_content.encode("utf-8")
+
+        # Calculate addresses (same as _write_note_file)
+        current_pos = len(self.FILETYPE) + len(self.SIGNATURE)
+
+        header_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(header_bytes)
+
+        # PDFSTYLELIST data
+        pdfstylelist_content = self._build_pdfstylelist_content(pdf_name, pdf_md5, pdf_size)
+        pdfstylelist_bytes = pdfstylelist_content.encode("utf-8")
+        pdfstylelist_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(pdfstylelist_bytes)
+
+        # PNG data addresses (BGLAYER content)
+        bglayer_content_addresses = []
+        for png_data in png_pages:
+            bglayer_content_addresses.append(current_pos)
+            current_pos += self.LENGTH_FIELD_SIZE + len(png_data)
+
+        # Default style (STYLE_style_white_a5x2)
+        style_white_address = current_pos
+        current_pos += self.LENGTH_FIELD_SIZE + len(self.EMPTY_LAYER_RLE)
+
+        # MAINLAYER RLE data for each page
+        mainlayer_content_addresses = []
+        for _ in range(num_pages):
+            mainlayer_content_addresses.append(current_pos)
+            current_pos += self.LENGTH_FIELD_SIZE + len(self.EMPTY_LAYER_RLE)
+
+        # Layer metadata addresses
+        layer_metadata_addresses = []
+        for page_idx in range(num_pages):
+            # MAINLAYER metadata
+            mainlayer_meta = self._build_layer_metadata(
+                "MAINLAYER",
+                mainlayer_content_addresses[page_idx],
+            )
+            layer_addr = current_pos
+            current_pos += self.LENGTH_FIELD_SIZE + len(mainlayer_meta.encode("utf-8"))
+
+            # BGLAYER metadata
+            bglayer_meta = self._build_layer_metadata(
+                "BGLAYER",
+                bglayer_content_addresses[page_idx],
+            )
+            current_pos += self.LENGTH_FIELD_SIZE + len(bglayer_meta.encode("utf-8"))
+
+            layer_metadata_addresses.append(layer_addr)
+
+        # Page metadata addresses
+        page_metadata_addresses = []
+        for page_idx in range(num_pages):
+            page_addr = current_pos
+            page_meta = self._build_page_metadata(
+                page_idx,
+                pdf_name,
+                page_md5s[page_idx],
+                pdf_size,
+                layer_metadata_addresses[page_idx],
+            )
+            current_pos += self.LENGTH_FIELD_SIZE + len(page_meta.encode("utf-8"))
+            page_metadata_addresses.append(page_addr)
+
+        # Footer block
+        footer_address = current_pos
+        footer_content = self._build_footer_content(
+            header_address,
+            page_metadata_addresses,
+            bglayer_content_addresses,
+            pdf_name,
+            page_md5s,
+            pdf_size,
+            pdfstylelist_address=pdfstylelist_address,
+            style_white_address=style_white_address,
+        )
+        footer_bytes = footer_content.encode("utf-8")
+
+        # Write the file (same as _write_note_file but with ZIP appended)
+        with open(output_path, "wb") as f:
+            # 1-2. Filetype + Signature
+            f.write(self.FILETYPE)
+            f.write(self.SIGNATURE)
+
+            # 3. Header block
+            f.write(struct.pack("<I", len(header_bytes)))
+            f.write(header_bytes)
+
+            # 4. PDFSTYLELIST data block
+            f.write(struct.pack("<I", len(pdfstylelist_bytes)))
+            f.write(pdfstylelist_bytes)
+
+            # 5. PNG data for each page (BGLAYER content - NEW TEMPLATES)
+            for png_data in png_pages:
+                f.write(struct.pack("<I", len(png_data)))
+                f.write(png_data)
+
+            # 6. Default style RLE data
+            f.write(struct.pack("<I", len(self.EMPTY_LAYER_RLE)))
+            f.write(self.EMPTY_LAYER_RLE)
+
+            # 7. Empty MAINLAYER RLE data for each page
+            for _ in range(num_pages):
+                f.write(struct.pack("<I", len(self.EMPTY_LAYER_RLE)))
+                f.write(self.EMPTY_LAYER_RLE)
+
+            # 8. Layer metadata blocks
+            for page_idx in range(num_pages):
+                # MAINLAYER
+                mainlayer_meta = self._build_layer_metadata(
+                    "MAINLAYER",
+                    mainlayer_content_addresses[page_idx],
+                )
+                f.write(struct.pack("<I", len(mainlayer_meta.encode("utf-8"))))
+                f.write(mainlayer_meta.encode("utf-8"))
+
+                # BGLAYER
+                bglayer_meta = self._build_layer_metadata(
+                    "BGLAYER",
+                    bglayer_content_addresses[page_idx],
+                )
+                f.write(struct.pack("<I", len(bglayer_meta.encode("utf-8"))))
+                f.write(bglayer_meta.encode("utf-8"))
+
+            # 9. Page metadata blocks
+            for page_idx in range(num_pages):
+                page_meta = self._build_page_metadata(
+                    page_idx,
+                    pdf_name,
+                    page_md5s[page_idx],
+                    pdf_size,
+                    layer_metadata_addresses[page_idx],
+                )
+                f.write(struct.pack("<I", len(page_meta.encode("utf-8"))))
+                f.write(page_meta.encode("utf-8"))
+
+            # 10. Footer block
+            f.write(struct.pack("<I", len(footer_bytes)))
+            f.write(footer_bytes)
+
+            # 11. "tail" marker
+            f.write(b"tail")
+
+            # 12. Footer address
+            f.write(struct.pack("<I", footer_address))
+
+            # 13. APPEND EXISTING ZIP ARCHIVE (HANDWRITING DATA) - This is the key difference!
+            # The ZIP archive contains all the handwriting from the original file
+            f.write(zip_archive)
 
     def _write_png_template_note_file(
         self,
@@ -1033,15 +1305,31 @@ def convert_markdown_to_note(
     output_path: str | Path,
     device: str = "A5X2",
     language: str = "en_GB",
-    realtime: bool = False,
+    realtime: Optional[bool] = None,
     page_size: str = "A5",
     margin: str = "2cm",
     font_size: int = 11,
+    use_frontmatter: bool = True,
+    update_markdown: bool = True,
 ) -> None:
-    """Convert Markdown file to .note file.
+    """Convert Markdown file to .note file with frontmatter support.
 
     This converts a Markdown file to a Supernote .note file by first
     converting to PDF using Pandoc, then converting the PDF to .note format.
+
+    After successful conversion, the markdown file's frontmatter is updated
+    with a reference to the created .note file using [x.note] notation.
+
+    Frontmatter properties (optional, in YAML frontmatter):
+    - supernote.type: "standard" (default) or "realtime"
+    - supernote.file: "[path/to/file.note]" - Reference to linked .note file
+
+    Example frontmatter:
+        ---
+        title: My Note
+        supernote.type: realtime
+        supernote.file: "[output/my-note.note]"
+        ---
 
     Requires Pandoc to be installed:
         Windows: choco install pandoc
@@ -1053,13 +1341,48 @@ def convert_markdown_to_note(
         output_path: Path to output .note file
         device: Target device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
         language: Recognition language (used when realtime=True)
-        realtime: Enable realtime handwriting recognition mode
+        realtime: Enable realtime handwriting recognition mode.
+                  If None (default), reads from frontmatter supernote.type.
+                  If explicitly set, overrides frontmatter.
         page_size: PDF page size (A4, A5, A6, Letter)
         margin: Page margins (e.g., "2cm", "1in")
         font_size: Base font size in points
+        use_frontmatter: Whether to read frontmatter properties (default: True)
+        update_markdown: Whether to update markdown with .note file reference (default: True)
     """
-    markdown_path = Path(markdown_path)
-    output_path = Path(output_path)
+    markdown_path = Path(markdown_path).resolve()
+    output_path = Path(output_path).resolve()
+
+    # Read frontmatter properties if enabled
+    final_realtime = realtime  # Start with explicit parameter value
+    existing_note_path = None  # Path to existing .note file for update mode
+
+    if use_frontmatter:
+        props, _ = read_markdown_with_frontmatter(markdown_path, warn=True)
+
+        # Only use frontmatter realtime value if not explicitly overridden
+        if realtime is None:
+            final_realtime = props.realtime
+
+        # Check if supernote.file property exists (update mode)
+        if props.supernote_file:
+            # Resolve [x.note] notation to absolute path
+            note_file_path = props.get_absolute_file_path(markdown_path)
+
+            if note_file_path and note_file_path.exists():
+                print(
+                    f"Update mode: Found existing .note file at {note_file_path}"
+                )
+                existing_note_path = note_file_path
+            else:
+                print(
+                    f"Info: supernote.file property found ('{props.supernote_file}') "
+                    f"but file doesn't exist yet. Creating new .note file."
+                )
+
+    # Default to False if still None
+    if final_realtime is None:
+        final_realtime = False
 
     # Create temporary PDF file
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_pdf:
@@ -1074,9 +1397,25 @@ def convert_markdown_to_note(
         )
         pandoc.convert(markdown_path, tmp_pdf_path)
 
-        # Convert PDF to .note
+        # Convert PDF to .note (with update mode if existing file found)
         writer = NoteFileWriter(device=device, language=language)
-        writer.convert_pdf_to_note(tmp_pdf_path, output_path, realtime=realtime)
+
+        if existing_note_path:
+            # UPDATE MODE: Preserve handwriting while replacing template
+            print("Using UPDATE mode - preserving handwriting annotations")
+            writer.update_note_file(
+                existing_note_path,
+                tmp_pdf_path,
+                output_path,
+                realtime=final_realtime,
+            )
+        else:
+            # CREATE MODE: Create new .note file
+            writer.convert_pdf_to_note(tmp_pdf_path, output_path, realtime=final_realtime)
+
+        # Update markdown frontmatter with reference to created .note file
+        if update_markdown:
+            update_frontmatter_file_reference(markdown_path, output_path)
 
     finally:
         # Clean up temporary PDF file

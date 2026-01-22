@@ -259,6 +259,18 @@ class NoteFileParser:
             ),
         }
 
+    def get_zip_archive(self) -> Optional[bytes]:
+        """Get the raw ZIP archive data.
+
+        This contains all handwriting layers, annotations, and page metadata
+        in MyScript iink format. Can be used to preserve handwriting when
+        updating the template/background.
+
+        Returns:
+            Raw ZIP archive bytes, or None if no handwriting data exists
+        """
+        return self.zip_data
+
 
 def inspect_note_file(note_file: str | Path) -> Dict[str, Any]:
     """Convenience function to inspect a .note file.

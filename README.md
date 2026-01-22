@@ -12,6 +12,8 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 ### Working ✅
 
 - **Markdown → .note**: Convert Obsidian markdown directly to Supernote .note files (via Pandoc)
+  - ✨ **NEW:** Frontmatter support for `supernote.type` (standard/realtime)
+  - ✨ **NEW:** Auto-updates markdown with `supernote.file` reference using [x.note] notation
 - **Markdown → PDF**: Convert Obsidian markdown to Supernote-optimized PDFs (via Pandoc)
 - **PDF → .note**: Convert PDFs to annotatable Supernote .note files (device-tested)
 - **PNG → .note**: Convert PNG templates to .note files (device-tested)
@@ -51,6 +53,9 @@ pip install -r requirements.txt
 ### Usage
 
 ```bash
+# Convert markdown directly to .note (with frontmatter support)
+python -m obsidian_supernote.cli md-to-note input.md output.note
+
 # Convert markdown to PDF for Supernote
 python -m obsidian_supernote.cli md-to-pdf input.md output.pdf
 
@@ -59,6 +64,26 @@ python -m obsidian_supernote.cli note-to-md input.note output.md
 
 # Full sync (coming soon)
 python -m obsidian_supernote.cli sync --config config.yml
+```
+
+### Frontmatter Properties
+
+Add optional properties to your markdown files to control conversion:
+
+```yaml
+---
+title: "My Daily Note"
+supernote.type: realtime  # or "standard" (default)
+---
+```
+
+After conversion, the markdown is automatically updated with a file reference:
+```yaml
+---
+title: "My Daily Note"
+supernote.type: realtime
+supernote.file: "[output/my-note.note]"  # Auto-added
+---
 ```
 
 ## Project Structure
@@ -107,6 +132,7 @@ mypy obsidian_supernote/
 For detailed documentation, see:
 - [Project Roadmap](docs/ROADMAP.md) - Development phases and goals
 - [Implementation Status](docs/IMPLEMENTATION_STATUS.md) - Current feature status
+- [Frontmatter Properties](docs/FRONTMATTER_PROPERTIES.md) - Markdown frontmatter reference
 - [Pandoc Setup](docs/PANDOC_SETUP.md) - Installing Pandoc for PDF conversion
 - [Testing Notes](docs/TESTING_NOTES.md) - Testing documentation
 

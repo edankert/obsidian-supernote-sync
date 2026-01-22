@@ -178,19 +178,40 @@ obsidian-supernote note-to-md input.note output.md [--image-dir images/] [--embe
 
 ## In Progress Features
 
-### 5. Frontmatter Properties & .note Update Mode ⚠️ (Planned)
+### 5. Frontmatter Properties & Markdown Auto-Update ✅ (Complete)
 
-**Status:** Specification complete, implementation pending
+**Status:** ✅ IMPLEMENTED (v0.2.0-alpha)
 
-**Planned Features:**
-- Frontmatter properties for conversion control:
-  - `supernote_type`: Choose between "standard" (sketching) or "realtime" (annotations/text)
-  - `supernote_linked_file`: Update existing .note files instead of creating new ones
-  - Device-specific settings (device, page_size, realtime mode)
-- .note file update functionality:
-  - Replace template/background content while preserving handwritten annotations
-  - Maintain layer structure and annotation integrity
-  - Support for version tracking and versioning
+**Implemented Features:**
+- ✅ Frontmatter property parsing (2 properties):
+  - `supernote.type`: Choose between "standard" (sketching) or "realtime" (annotations/text)
+  - `supernote.file`: Auto-managed link to generated .note file using [x.note] notation
+- ✅ Automatic markdown frontmatter update after conversion
+- ✅ [x.note] bracket notation for relative file paths
+- ✅ New CLI command: `md-to-note` with frontmatter support
+- ✅ 34 comprehensive tests (100% passing, 92% coverage)
+
+**Python API:**
+```python
+from obsidian_supernote.converters import convert_markdown_to_note
+
+# Automatic frontmatter reading and markdown update
+convert_markdown_to_note("daily.md", "output/daily.note")
+
+# Disable automatic markdown update
+convert_markdown_to_note("daily.md", "output/daily.note", update_markdown=False)
+```
+
+**CLI Usage:**
+```bash
+# Convert with automatic frontmatter reading and markdown update
+obsidian-supernote md-to-note daily.md output/daily.note
+
+# Disable automatic markdown update
+obsidian-supernote md-to-note daily.md output.note --no-update-markdown
+```
+
+**Pending:** .note file update mode (preserve annotations while replacing template)
 
 ### 6. Text Extraction from Device Recognition ⚠️ (Planned)
 
@@ -230,15 +251,18 @@ obsidian-supernote status
 
 ## Test Coverage
 
-**Overall:** 15% coverage (12 passing tests)
+**Overall:** 19% coverage (48 passing tests)
 
 **By Module:**
 - `obsidian_supernote/__init__.py`: 100%
+- `obsidian_supernote/utils/__init__.py`: 100%
+- `obsidian_supernote/utils/frontmatter.py`: 92% (NEW - 34 tests)
 - `obsidian_supernote/parsers/__init__.py`: 100%
-- `obsidian_supernote/parsers/note_parser.py`: 18%
+- `obsidian_supernote/parsers/note_parser.py`: 17%
 - `obsidian_supernote/converters/markdown_to_pdf.py`: 12%
-- `obsidian_supernote/converters/note_writer.py`: 45% (verified against golden files)
-- `obsidian_supernote/cli.py`: 10%
+- `obsidian_supernote/converters/note_writer.py`: 15% (includes frontmatter integration)
+- `obsidian_supernote/converters/pandoc_converter.py`: 58%
+- `obsidian_supernote/cli.py`: 0% (CLI tested manually)
 
 ## Dependencies Status
 
@@ -350,23 +374,25 @@ pytest --cov
 
 ### Immediate Priorities
 
-1. **Implement Frontmatter Properties**
-   - Add support for `supernote_type`, `supernote_linked_file`, device-specific settings
-   - Implement frontmatter parsing in CLI commands
-   - Enable automatic .note type selection from markdown metadata
+1. ~~**Implement Frontmatter Properties**~~ ✅ COMPLETE
+   - ✅ Added support for `supernote.type`, `supernote.file`
+   - ✅ Implemented frontmatter parsing in CLI commands
+   - ✅ Automatic markdown update with [x.note] notation
+   - ✅ New `md-to-note` CLI command
 
-2. **Implement .note File Update Mode**
+2. **Implement .note File Update Mode** (Next Priority)
    - Extract annotation layers from existing .note files
    - Replace template/background content while preserving sketches/annotations
    - Handle page dimension changes gracefully
    - Validate and ensure .note file format integrity
+   - Read `supernote.file` property and trigger update mode
 
-3. **Add Realtime Note Support**
-   - Enable `realtime=True` parameter for .note generation
-   - Support realtime handwriting recognition in conversion pipeline
-   - Test realtime note creation and annotation workflows
+3. ~~**Add Realtime Note Support**~~ ✅ COMPLETE
+   - ✅ Enable `realtime=True` parameter for .note generation
+   - ✅ Support realtime handwriting recognition via `supernote.type: realtime`
+   - ✅ Tested realtime note creation workflows
 
-4. **Begin Sync Engine**
+4. **Begin Sync Engine** (Future)
    - Design file monitoring system (folder watching)
    - Implement MD5 change detection
    - Create workflow-specific sync logic (Daily Notes, Research, World Building)

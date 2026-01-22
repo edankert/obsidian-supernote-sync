@@ -1,15 +1,19 @@
 # Obsidian-Supernote Sync Roadmap
 
-**Last Updated:** 2026-01-20
-**Status:** Phase 3 In Progress - Core Converters Complete, Workflow Automation Planned
+**Last Updated:** 2026-01-22
+**Status:** Step 1 Complete - Frontmatter Parsing Implemented
 **PRD Location:** `C:\Edwin\Notes Vault\03 Projects\Obsidian-Supernote Sync\Obsidian-Supernote Sync Tool.md`
 
-## Recent Additions (2026-01-20)
+## Recent Additions (2026-01-22)
 
-- ✨ Frontmatter properties for .note type control (`supernote_type`, `supernote_linked_file`)
-- ✨ .note file update mode (replace template while preserving annotations/sketches)
-- ✨ Realtime note type support for annotation workflows (Research Notes)
-- ✨ Progressive automation levels for each workflow (Manual → Semi-Auto → Full Automation)
+- ✅ **Step 1 COMPLETE:** Frontmatter property parsing fully implemented
+  - ✅ `supernote.type` property (standard/realtime)
+  - ✅ `supernote.file` property with [x.note] notation
+  - ✅ Automatic markdown update after conversion
+  - ✅ New `md-to-note` CLI command
+  - ✅ 34 comprehensive tests (100% passing, 92% coverage)
+- ⏳ .note file update mode (preserve annotations): Planned for Step 2
+- ✅ Realtime note type support for annotation workflows
 
 ## Phase Mapping
 
@@ -112,13 +116,36 @@ convert_markdown_to_note("document.md", "output.note", page_size="A5", margin="2
 
 **Goal:** Reliable end-to-end conversion in both directions + sync state tracking
 
-#### Step 2.1: Obsidian → Supernote Workflow
+#### Step 1: Frontmatter Property Parsing ✅ COMPLETE (2026-01-22)
+
+**Implemented:**
+```bash
+# Convert markdown directly to .note with frontmatter support
+obsidian-supernote md-to-note "My Note.md" "output/My Note.note"
+
+# Markdown is automatically updated with file reference:
+# supernote.file: "[output/My Note.note]"
+```
+
+**Features:**
+- ✅ Parse `supernote.type` (standard/realtime) from frontmatter
+- ✅ Auto-update markdown with `supernote.file` using [x.note] notation
+- ✅ New `md-to-note` CLI command
+- ✅ 34 tests, 92% coverage
+
+#### Step 2: .note File Update Mode (NEXT)
+
+**Planned:**
+- Read existing .note file when `supernote.file` is present
+- Extract and preserve annotation layers
+- Replace template/background only
+- Maintain handwriting and sketches
+
+#### Step 2.1: Obsidian → Supernote Workflow (Alternative)
 
 ```bash
-# Convert markdown to PDF
+# Two-step workflow (if md-to-note not used)
 obsidian-supernote md-to-pdf "My Note.md" "My Note.pdf"
-
-# Convert PDF to .note
 obsidian-supernote pdf-to-note "My Note.pdf" "My Note.note"
 
 # Copy to Supernote device

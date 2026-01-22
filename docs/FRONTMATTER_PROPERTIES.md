@@ -72,65 +72,76 @@ supernote.type: standard
 
 ---
 
-### 2. `supernote.file` (Optional)
+### 2. `supernote.file` (Auto-Managed)
 
-**Type:** String (file path)
-**Valid Values:** Relative or absolute path to existing .note file
-**Default:** None (creates new file)
-**Required:** No (uncertain if truly needed)
-**Workflow Use:** Research Notes, World Building (when updating)
+**Type:** String (file path with [x.note] notation)
+**Valid Values:** `"[relative/path/file.note]"` notation
+**Default:** None (auto-set after first conversion)
+**Required:** No (automatically managed by CLI)
+**Workflow Use:** All workflows (auto-updated)
 
 **Description:**
-*Optional/Uncertain:* Specifies an existing .note file to update instead of creating a new one. When specified, the conversion will replace the template/background content while preserving all handwritten annotations and sketches.
+**Automatically managed property** that links a markdown file to its generated .note file. After the first conversion, the CLI automatically adds/updates this property in the markdown frontmatter with a reference to the created .note file.
 
-This property may not be essential if the sync software handles linked file determination differently.
+**Path Format - [x.note] Notation:**
+The CLI uses bracketed notation to indicate relative paths from the markdown file:
+- Same directory: `"[daily.note]"`
+- Subdirectory: `"[output/daily.note]"`
+- Parent directory: `"[../daily.note]"`
+- Cross-platform: Always uses forward slashes `/`
 
-**Path Format:**
-- Relative paths are relative to vault root: `"Reading/Article.note"`
-- Relative paths with backslashes work: `"Characters/Aragorn.note"`
-- Absolute paths supported: `"C:/Edwin/Notes/article.note"`
+**Automatic Update Workflow:**
+1. User creates markdown without `supernote.file`
+2. User runs: `obsidian-supernote md-to-note daily.md output/daily.note`
+3. CLI creates `output/daily.note` **and** updates `daily.md` frontmatter:
+   ```yaml
+   supernote.file: "[output/daily.note]"
+   ```
+4. Future: Edit markdown and re-run conversion → updates existing .note (preserves handwriting)
 
 **Impact on Conversion:**
-- Triggers "update mode" instead of "create mode"
-- Reads existing .note file structure
-- Extracts annotation layers (preserves)
-- Generates new PDF template
-- Replaces template layer only
-- Reassembles with preserved layers
+- First conversion: Creates new .note file, auto-updates markdown
+- Future conversions (when implemented): Updates .note file, preserves annotations
+- Can disable auto-update with: `--no-update-markdown` flag
 
-**Examples:**
+**Note:** Update mode (preserving handwriting while replacing template) is planned for future implementation.
+
+**Examples (Auto-Generated):**
 
 ```yaml
-# Update existing research note when article is revised
-supernote.file: "Reading/DeepLearning_2026.note"
+# After first conversion, CLI automatically adds:
+supernote.file: "[output/daily.note]"
 
-# Update character profile keeping sketches
-supernote.file: "Characters/Aragorn.note"
+# Subdirectory example (auto-generated):
+supernote.file: "[Reading/DeepLearning_2026.note]"
+
+# Parent directory example (auto-generated):
+supernote.file: "[../notes/Aragorn.note]"
 ```
 
-**Behavior:**
-- If file doesn't exist: Log warning, create new file instead
-- If file is not valid .note: Error - do not proceed
-- If file is locked by device: Error - wait or try later
-- Always validates before attempting update
+**Current Behavior (v0.2.0-alpha):**
+- ✅ Auto-updates markdown after conversion
+- ✅ Uses [x.note] notation for relative paths
+- ✅ Preserves existing frontmatter properties
+- ⏳ Update mode (preserving handwriting): Planned for future release
 
 **Implementation Checklist:**
-- [ ] Read path from frontmatter
-- [ ] Check if file exists
-- [ ] Validate .note file format (read header)
-- [ ] Set conversion mode to "update" vs "create"
-- [ ] Pass file path to note_writer.py
-- [ ] Handle missing files gracefully
-- [ ] Test update mode preserves annotations
+- [x] Read path from frontmatter
+- [x] Auto-update markdown with file reference
+- [x] Use [x.note] bracket notation
+- [x] Handle relative and absolute paths
+- [x] Preserve existing frontmatter
+- [ ] Implement update mode (preserve annotations)
+- [ ] Test update mode preserves handwriting
 
 ---
 
 ## Defaults Summary
 
-| Property | Default | Condition |
-|----------|---------|-----------|
-| `supernote.type` | `"standard"` | Always |
-| `supernote.file` | None | None (optional feature) |
+| Property | Default | Behavior |
+|----------|---------|----------|
+| `supernote.type` | `"standard"` | Used if not specified in frontmatter |
+| `supernote.file` | Auto-generated | Set automatically after first conversion |
 
 ---
 
@@ -144,10 +155,11 @@ supernote.file: "Characters/Aragorn.note"
    - If invalid: log warning, use default
 
 2. **`supernote.file`** (if present)
-   - Must be valid path to existing .note file
-   - If missing: create new file (normal behavior)
-   - If invalid path: log warning, create new file
-   - Optional - only validate if property is specified
+   - Auto-managed by CLI (normally don't edit manually)
+   - Uses [x.note] bracket notation for relative paths
+   - If missing: normal (first conversion hasn't happened yet)
+   - If present: indicates linked .note file exists
+   - Future: Will trigger update mode instead of create mode
 
 ### Error Handling
 
@@ -155,14 +167,15 @@ supernote.file: "Characters/Aragorn.note"
 ```yaml
 # Invalid supernote.type
 supernote.type: "recognition"  # ERROR: not "standard" or "realtime"
-# Action: Log error, use default "standard", continue
+# Action: Log warning, use default "standard", continue
 
-# Missing supernote.file (not an error, just optional)
-# Action: Create new .note file (normal behavior)
+# Missing supernote.file (not an error - normal for first conversion)
+# Action: Create new .note file, auto-update markdown with reference
 
-# Invalid supernote.file path
-supernote.file: "NonExistent/File.note"
-# Action: Log warning, create new file instead of updating
+# Manually edited supernote.file (future: will trigger update mode)
+supernote.file: "[Reading/Article.note]"
+# Current: Logged as info, update mode not yet implemented
+# Future: Will update existing .note file instead of creating new
 ```
 
 **Validation Checklist:**
@@ -176,77 +189,104 @@ supernote.file: "NonExistent/File.note"
 
 ## Implementation Summary
 
-### Properties to Parse (2 total)
+### Properties Implemented (2 total)
 
-1. ✅ `supernote.type` - Type of note (standard/realtime) — **CONTENT PROPERTY**
-2. ⚠️ `supernote.file` - Path to existing .note to update — **OPTIONAL/UNCERTAIN**
+1. ✅ `supernote.type` - Type of note (standard/realtime) — **CONTENT PROPERTY** ✅ COMPLETE
+2. ✅ `supernote.file` - Path to linked .note file — **AUTO-MANAGED** ✅ COMPLETE
 
-### Code Changes Needed
+### Code Changes Completed
 
-**File: `obsidian_supernote/converters/markdown_to_pdf.py`**
-- [ ] Add frontmatter parsing (YAML extraction)
-- [ ] Add property validation functions
-- [ ] Create property defaults configuration
-- [ ] Add logging for property reads/validation
+**File: `obsidian_supernote/utils/frontmatter.py`** ✅ CREATED
+- [x] Add frontmatter parsing (YAML extraction)
+- [x] Add property validation functions
+- [x] Create property defaults configuration
+- [x] Add [x.note] notation support
+- [x] Auto-update markdown with file reference
 
-**File: `obsidian_supernote/converters/note_writer.py`**
-- [ ] Handle `supernote.type` parameter
-- [ ] Handle `supernote.file` parameter
+**File: `obsidian_supernote/converters/note_writer.py`** ✅ UPDATED
+- [x] Handle `supernote.type` parameter
+- [x] Handle `supernote.file` parameter (parse and log)
+- [x] Auto-update markdown after conversion
+- [ ] Implement update mode (preserve annotations) - FUTURE
 
-**File: `obsidian_supernote/cli.py`**
-- [ ] Read markdown file and extract frontmatter
-- [ ] Pass properties to converter functions
-- [ ] Log which properties are being used
-- [ ] Show warnings/errors clearly
+**File: `obsidian_supernote/cli.py`** ✅ UPDATED
+- [x] Added `md-to-note` command
+- [x] Read markdown file and extract frontmatter
+- [x] Pass properties to converter functions
+- [x] Show which properties are being used
+- [x] Added `--no-update-markdown` flag
 
-**Tests Needed:**
-- [ ] Parse valid YAML frontmatter
-- [ ] Handle missing properties (use defaults)
-- [ ] Validate property values
-- [ ] Warn on invalid values
-- [ ] Examples from each workflow
+**Tests Completed:** ✅ 34/34 PASSING
+- [x] Parse valid YAML frontmatter
+- [x] Handle missing properties (use defaults)
+- [x] Validate property values
+- [x] Warn on invalid values
+- [x] Examples from each workflow
+- [x] Test [x.note] notation
+- [x] Test markdown auto-update
+- [x] Test path resolution
 
 ---
 
 ## Workflow-Specific Property Usage
 
-### Workflow 1: Daily Notes (Realtime + Update)
+### Workflow 1: Daily Notes (Realtime + Auto-Update)
 
+**User Creates:**
 ```yaml
 ---
 title: "Daily Notes 2026-01-20"
 created: 2026-01-20
 supernote.type: realtime
-supernote.file: "Journal/2026-01-20.note"
 ---
 ```
 
-**Properties Used:** `supernote.type`, `supernote.file`
-**Expected:** Realtime note with update mode enabled
-**Note:** Device, page size handled by sync software configuration
+**After CLI Conversion (Auto-Updated):**
+```yaml
+---
+title: "Daily Notes 2026-01-20"
+created: 2026-01-20
+supernote.type: realtime
+supernote.file: "[Journal/2026-01-20.note]"
+---
+```
+
+**Properties Used:** `supernote.type` (user-set), `supernote.file` (auto-added)
+**Expected:** Realtime note created, markdown auto-updated with file reference
 
 ---
 
-### Workflow 2: Research Notes (Realtime + Update)
+### Workflow 2: Research Notes (Realtime + Auto-Update)
 
+**User Creates:**
 ```yaml
 ---
 title: "Deep Learning Advances in 2026"
 author: "LeCun & Hinton"
 tags: [research, ai, to-supernote]
 supernote.type: realtime
-supernote.file: "Reading/DeepLearning_2026.note"
 ---
 ```
 
-**Properties Used:** `supernote.type`, `supernote.file`
-**Expected:** Realtime note with update mode enabled
-**Note:** Device, page size handled by sync software configuration
+**After CLI Conversion (Auto-Updated):**
+```yaml
+---
+title: "Deep Learning Advances in 2026"
+author: "LeCun & Hinton"
+tags: [research, ai, to-supernote]
+supernote.type: realtime
+supernote.file: "[Reading/DeepLearning_2026.note]"
+---
+```
+
+**Properties Used:** `supernote.type` (user-set), `supernote.file` (auto-added)
+**Expected:** Realtime note created, markdown auto-updated with file reference
 
 ---
 
-### Workflow 3: World Building (Standard, Optional Update)
+### Workflow 3: World Building (Standard + Auto-Update)
 
+**User Creates:**
 ```yaml
 ---
 title: "Aragorn - Ranger King"
@@ -254,7 +294,18 @@ aliases: ["Strider"]
 tags: [characters, worldbuilding, fantasy]
 created: 2026-01-10
 supernote.type: standard
-supernote.file: "Characters/Aragorn.note"
+---
+```
+
+**After CLI Conversion (Auto-Updated):**
+```yaml
+---
+title: "Aragorn - Ranger King"
+aliases: ["Strider"]
+tags: [characters, worldbuilding, fantasy]
+created: 2026-01-10
+supernote.type: standard
+supernote.file: "[Characters/Aragorn.note]"
 ---
 ```
 
