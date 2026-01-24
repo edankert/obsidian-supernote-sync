@@ -526,5 +526,67 @@ def init() -> None:
     console.print("[yellow]Not yet implemented - Coming soon![/yellow]")
 
 
+@main.command()
+@click.option("--host", default="127.0.0.1", help="Host to bind to (default: 127.0.0.1)")
+@click.option("--port", default=8765, help="Port to listen on (default: 8765)")
+@click.option("--reload", is_flag=True, help="Enable auto-reload for development")
+@click.option("--dashboard", type=click.Path(exists=True), help="Path to web dashboard static files")
+def serve(host: str, port: int, reload: bool, dashboard: str | None) -> None:
+    """Start the API server for Obsidian plugin and web dashboard.
+
+    The server provides:
+    - REST API for file conversions
+    - Workflow management endpoints
+    - WebSocket for real-time progress updates
+    - Web dashboard (if --dashboard path provided)
+
+    Example:
+        obsidian-supernote serve
+        obsidian-supernote serve --port 8080
+        obsidian-supernote serve --reload  # For development
+    """
+    try:
+        from obsidian_supernote.api import run_server
+
+        dashboard_path = Path(dashboard) if dashboard else None
+
+        console.print(Panel.fit(
+            "[bold cyan]Obsidian-Supernote API Server[/bold cyan]\n"
+            f"Starting server at http://{host}:{port}",
+            border_style="cyan"
+        ))
+
+        console.print("\n[bold]Endpoints:[/bold]")
+        console.print(f"  API Docs:    http://{host}:{port}/docs")
+        console.print(f"  Status:      http://{host}:{port}/status")
+        console.print(f"  Health:      http://{host}:{port}/health")
+        console.print(f"  Conversions: http://{host}:{port}/convert/...")
+        console.print(f"  Workflows:   http://{host}:{port}/workflows/...")
+        console.print(f"  WebSocket:   ws://{host}:{port}/events")
+
+        if dashboard_path:
+            console.print(f"  Dashboard:   http://{host}:{port}/dashboard")
+
+        console.print("\n[cyan]Press Ctrl+C to stop the server[/cyan]\n")
+
+        run_server(
+            host=host,
+            port=port,
+            dashboard_path=dashboard_path,
+            reload=reload,
+        )
+
+    except ImportError as e:
+        console.print(f"[bold red]ERROR:[/bold red] FastAPI dependencies not installed")
+        console.print("  Install with: pip install fastapi uvicorn[standard]")
+        console.print(f"\n  Details: {e}")
+        raise click.Abort()
+    except Exception as e:
+        console.print(f"[bold red]ERROR:[/bold red] {e}")
+        import traceback
+        console.print(traceback.format_exc())
+        raise click.Abort()
+
+
 if __name__ == "__main__":
     main()

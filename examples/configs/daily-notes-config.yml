@@ -1,0 +1,83 @@
+# Daily Notes Workflow Configuration
+# Use this config for daily journaling with handwritten additions
+#
+# Recommended .note type: REALTIME
+# - Captures handwritten text with device recognition
+# - Ideal for quick notes, to-do lists, reflections
+#
+# Usage:
+#   obsidian-supernote sync --config examples/configs/daily-notes-config.yml
+
+# Workflow Settings
+workflow:
+  name: "Daily Notes Integration"
+  description: "Sync daily journal entries between Obsidian and Supernote"
+  note_type: realtime  # Enable handwriting recognition
+
+# Paths
+paths:
+  # Your Obsidian vault location
+  obsidian_vault: "C:/Users/YourName/ObsidianVault"
+
+  # Daily notes folder within vault
+  daily_notes_folder: "02 Journal/Daily Notes"
+
+  # Supernote sync folder (USB mount or cloud path)
+  supernote_folder: "/Note/Daily"
+
+  # Where to store converted files temporarily
+  output_folder: "output/daily"
+
+# File Naming
+naming:
+  # Pattern for daily note files
+  # Supported placeholders: {YYYY}, {MM}, {DD}, {date}
+  obsidian_pattern: "{YYYY}-{MM}-{DD}.md"
+  supernote_pattern: "{YYYY}{MM}{DD}.note"
+
+  # Example: 2026-01-24.md -> 20260124.note
+
+# Conversion Settings
+conversion:
+  # Device type for proper rendering
+  device: A5X2  # Options: A5X, A5X2, A6X, A6X2, Manta, Nomad
+
+  # Note type (overrides frontmatter if set)
+  # type: realtime  # Uncomment to force realtime for all notes
+
+  # PDF settings for markdown conversion
+  page_size: A5
+  margin: "2cm"
+  font_size: 11
+
+# Frontmatter Defaults
+# Applied when frontmatter properties are missing
+frontmatter_defaults:
+  supernote.type: realtime
+
+# Sync Behavior (Phase 3 - future)
+sync:
+  # Direction: bidirectional, to_supernote, to_obsidian
+  direction: bidirectional
+
+  # Auto-sync when changes detected
+  auto_sync: false
+
+  # How often to check for changes (when auto_sync enabled)
+  poll_interval: "5m"
+
+  # Conflict resolution: manual, timestamp_wins, obsidian_priority, supernote_priority
+  conflict_resolution: timestamp_wins
+
+# Update Mode
+update:
+  # When updating existing .note files
+  preserve_annotations: true
+
+  # Backup original before update
+  backup_before_update: true
+
+# Logging
+logging:
+  level: INFO
+  show_progress: true

@@ -22,6 +22,11 @@ pymupdf>=1.24.0               # PDF to PNG conversion (for pdf-to-note)
 rich>=13.0.0                  # Beautiful terminal output
 click>=8.1.0                  # Command-line interface framework
 
+# API Server (Phase 3)
+fastapi>=0.109.0              # Modern async web framework
+uvicorn[standard]>=0.27.0     # ASGI server for FastAPI
+websockets>=12.0              # WebSocket support for real-time updates
+
 # File monitoring (for auto-sync)
 watchdog>=3.0.0               # File system event monitoring
 

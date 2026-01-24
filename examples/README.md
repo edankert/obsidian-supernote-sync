@@ -1,6 +1,22 @@
 # Examples
 
-This directory contains example files, templates, and tools for the obsidian-supernote sync project.
+This directory contains example files, templates, workflow guides, and tools for the obsidian-supernote sync project.
+
+## Workflow Guides (Start Here!)
+
+**New to the project?** Start with the workflow guides:
+
+| Workflow | Note Type | Best For | Guide |
+|----------|-----------|----------|-------|
+| Daily Notes | `realtime` | Journaling, to-do lists | [workflows/daily-notes/](workflows/daily-notes/) |
+| Research Notes | `realtime` | Article annotations | [workflows/research-notes/](workflows/research-notes/) |
+| World Building | `standard` | Sketches, maps, designs | [workflows/world-building/](workflows/world-building/) |
+
+Each workflow includes:
+- Step-by-step instructions
+- Ready-to-use templates
+- Complete examples
+- Troubleshooting tips
 
 ## Directory Structure
 
@@ -9,6 +25,26 @@ examples/
 ├── README.md                    # This file
 ├── config.example.yml           # Example configuration file
 ├── sample.md                    # Sample Markdown document
+│
+├── workflows/                   # Step-by-step workflow guides
+│   ├── README.md                # Workflow overview
+│   ├── daily-notes/             # Daily journaling workflow
+│   │   ├── README.md
+│   │   ├── daily-note-template.md
+│   │   └── 2026-01-24-example.md
+│   ├── research-notes/          # Research annotation workflow
+│   │   ├── README.md
+│   │   ├── research-article-template.md
+│   │   └── machine-learning-survey-example.md
+│   └── world-building/          # Creative sketching workflow
+│       ├── README.md
+│       ├── character-template.md
+│       └── aragorn-example.md
+│
+├── configs/                     # Workflow configuration files
+│   ├── daily-notes-config.yml
+│   ├── research-notes-config.yml
+│   └── world-building-config.yml
 │
 ├── templates/                   # Input templates for note creation
 │   ├── README.md
@@ -42,7 +78,24 @@ examples/
     └── 20241004_120815_page_02.png
 ```
 
-## Workflows
+## User Workflows
+
+See the [workflows/](workflows/) directory for detailed step-by-step guides.
+
+### Quick Start: Convert Markdown to .note
+
+```bash
+# 1. Add frontmatter to your markdown file
+# supernote.type: realtime (for text) or standard (for sketching)
+
+# 2. Convert to .note
+obsidian-supernote md-to-note "my-note.md" "output/my-note.note"
+
+# 3. Copy to Supernote
+copy "output\my-note.note" "E:\Note\"
+```
+
+## Technical Workflows
 
 ### 1. Reverse Engineering .note Format
 
@@ -75,7 +128,7 @@ obsidian-supernote pdf-to-note sample.pdf sample.note
 # Step 3: Copy .note to Supernote device
 ```
 
-**Note:** Generated .note files currently work with supernotelib but may not load on the actual Supernote device. This is an active area of development.
+**Note:** Generated .note files are now device-tested and work on Supernote devices!
 
 ### 3. .note to Markdown (Supernote → Obsidian)
 

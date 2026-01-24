@@ -1,0 +1,114 @@
+# World Building Workflow Configuration
+# Use this config for creative writing and visual design work
+#
+# Recommended .note type: STANDARD
+# - Pure sketching without text recognition
+# - Ideal for character designs, maps, diagrams, visual concepts
+#
+# Usage:
+#   obsidian-supernote sync --config examples/configs/world-building-config.yml
+
+# Workflow Settings
+workflow:
+  name: "World Building Flow"
+  description: "Sketch and design on Supernote, integrate with Obsidian worldbuilding notes"
+  note_type: standard  # Pure sketching mode
+
+# Paths
+paths:
+  # Your Obsidian vault location
+  obsidian_vault: "C:/Users/YourName/ObsidianVault"
+
+  # World building folders
+  worldbuilding_folders:
+    - "03 Projects/WorldName/Characters"
+    - "03 Projects/WorldName/Locations"
+    - "03 Projects/WorldName/Items"
+    - "03 Projects/WorldName/Maps"
+
+  # Supernote sync folder
+  supernote_folder: "/Note/WorldBuilding"
+
+  # Output folder structure mirrors Obsidian
+  output_folder: "output/worldbuilding"
+
+# File Organization
+organization:
+  # Mirror Obsidian folder structure on Supernote
+  mirror_structure: true
+
+  # Folder mapping (if not mirroring)
+  # folder_mapping:
+  #   "Characters": "/Note/WorldBuilding/Characters"
+  #   "Locations": "/Note/WorldBuilding/Locations"
+
+# Conversion Settings
+conversion:
+  device: A5X2
+
+  # PDF settings for sketching
+  page_size: A5
+  margin: "1cm"  # Smaller margins for more sketch space
+  font_size: 10
+
+  # For character sheets, include basic info at top
+  include_header: true
+
+# Frontmatter Defaults
+frontmatter_defaults:
+  supernote.type: standard
+
+# Sketch Import Settings
+import:
+  # Where to place sketch images
+  image_folder: "assets/sketches"
+
+  # Naming pattern for imported sketches
+  image_pattern: "{filename}_sketch_{page}.png"
+
+  # Image quality
+  image_format: png
+  image_dpi: 300
+
+  # Auto-embed in original note
+  auto_embed: true
+  embed_position: end  # Options: start, end, section (under "## Sketches")
+
+# Batch Processing (useful for world building)
+batch:
+  # Process multiple files at once
+  enabled: true
+
+  # Parallel processing
+  parallel: true
+  max_workers: 4
+
+# Sync Behavior (Phase 3 - future)
+sync:
+  direction: bidirectional
+  auto_sync: false
+  poll_interval: "30m"
+
+  # For creative work, often want to keep both versions
+  conflict_resolution: keep_both
+
+# Update Mode
+update:
+  preserve_annotations: true
+  backup_before_update: true
+
+# Versioning (useful for iterating on designs)
+versioning:
+  # Keep version history
+  enabled: false
+
+  # Naming pattern for versions
+  # version_pattern: "{filename}_v{version}.note"
+
+  # Max versions to keep
+  # max_versions: 5
+
+# Logging
+logging:
+  level: INFO
+  show_progress: true

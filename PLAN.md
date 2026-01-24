@@ -1,8 +1,8 @@
 # Implementation Plan: Obsidian-Supernote Sync Tool
 
-**Last Updated:** 2026-01-20
-**Status:** Phase 2 Planning - Ready for Development
-**Current Phase:** Core Converters Complete → Workflow Automation
+**Last Updated:** 2026-01-24
+**Status:** Phase 2 Complete - Starting Phase 3 (Hybrid UI Architecture)
+**Current Phase:** Manual CLI Complete → Hybrid UI (Plugin + Backend + Dashboard)
 
 ## Overview
 
@@ -56,17 +56,19 @@ This document outlines the implementation plan for the Obsidian-Supernote Sync t
 - Feature dependency matrix
 - Migration paths and examples
 
-### 🔄 In Progress
+### ✅ Recently Completed
 
-- Workflow specifications (complete, awaiting implementation)
-- Frontmatter properties design (complete, code pending)
-- .note update mode design (complete, code pending)
+- Step 1: Frontmatter property parsing (34 tests, 92% coverage)
+- Step 2: .note file update mode (preserves handwriting)
+- Step 3: Realtime recognition support
+- Step 4: Configuration examples & documentation
 
-### ❌ Not Started
+### ❌ Not Started (Phase 3)
 
-- Frontmatter property parsing (CLI integration)
-- .note file update mode (layer preservation code)
 - File watching/monitoring system
+- Batch operations
+- Change detection (MD5 hashing)
+- Sync database (SQLite)
 - Sync engine with conflict resolution
 - Cloud API integration
 - GUI interface
@@ -241,36 +243,38 @@ Result: Created note shows text recognition as user writes on device
 
 ---
 
-### Step 4: Configuration Examples & Documentation (1 week)
+### Step 4: Configuration Examples & Documentation ✅ COMPLETE
 
 **Objective:** Provide ready-to-use configuration examples for all workflows and automation levels.
 
 **Tasks:**
-- [ ] **4.1:** Create example frontmatter templates
-  - Daily Notes example
-  - Research Notes example (realtime)
-  - World Building example (standard)
+- [x] **4.1:** Create example frontmatter templates
+  - ✅ Daily Notes template and example (`examples/workflows/daily-notes/`)
+  - ✅ Research Notes template and example (`examples/workflows/research-notes/`)
+  - ✅ World Building template and example (`examples/workflows/world-building/`)
 
-- [ ] **4.2:** Create workflow configuration files
-  - `examples/configs/daily-notes-config.yml`
-  - `examples/configs/research-notes-config.yml`
-  - `examples/configs/world-building-config.yml`
+- [x] **4.2:** Create workflow configuration files
+  - ✅ `examples/configs/daily-notes-config.yml`
+  - ✅ `examples/configs/research-notes-config.yml`
+  - ✅ `examples/configs/world-building-config.yml`
 
-- [ ] **4.3:** Create step-by-step workflow guides
-  - README for each workflow
-  - Before/after examples
-  - Troubleshooting tips
+- [x] **4.3:** Create step-by-step workflow guides
+  - ✅ README for each workflow with step-by-step instructions
+  - ✅ Before/after examples included
+  - ✅ Troubleshooting tips in each guide
 
-- [ ] **4.4:** Update main README
-  - Quick start with frontmatter properties
-  - Link to workflow guides
-  - Feature status updates
+- [x] **4.4:** Update main README
+  - ✅ Quick start with frontmatter properties
+  - ✅ Workflow guides table with links
+  - ✅ Feature status updates
 
 **Success Criteria:**
 - ✅ Users can copy-paste examples
 - ✅ Examples are self-documented
 - ✅ Works without modification
 - ✅ Clear instructions for customization
+
+**Completed:** 2026-01-24
 
 ---
 
@@ -296,42 +300,132 @@ Result: Created note shows text recognition as user writes on device
 
 ---
 
-## Phase 3: Semi-Automated Sync (8-12 weeks)
+## Phase 3: Hybrid UI Architecture (10-14 weeks)
 
-**Goal:** Automate conversions and change detection based on folder monitoring and tags.
+**Goal:** Create a user-friendly interface for managing conversions and workflows via a hybrid Obsidian Plugin + Python Backend + Web Dashboard architecture.
 
-### Key Features
+### Architecture Overview
 
-- [ ] **File watching system**
-  - Monitor Obsidian vault folders
-  - Detect markdown changes
-  - Trigger automatic conversions
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    OBSIDIAN PLUGIN (TypeScript)                  │
+│  - Ribbon icon, commands, status bar                            │
+│  - Quick actions: Convert current file, Sync All                │
+│  - Settings tab for backend URL and defaults                    │
+└─────────────────────┬───────────────────────────────────────────┘
+                      │ HTTP API
+                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 PYTHON BACKEND (FastAPI Server)                  │
+│  - REST API wrapping existing converters (100% reuse)           │
+│  - Workflow execution engine                                    │
+│  - WebSocket for real-time progress updates                     │
+│  - Serves web dashboard static files                            │
+└─────────────────────┬───────────────────────────────────────────┘
+                      │ Serves static files
+                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 WEB DASHBOARD (React SPA)                        │
+│  - Visual workflow designer (drag-and-drop)                     │
+│  - Pre-defined workflow templates                               │
+│  - Configuration panels for devices, folders                    │
+│  - Sync history and status display                              │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-- [ ] **Tag-based workflow**
-  - Detect `#to-supernote` tags
-  - Auto-convert tagged articles
-  - Create workflow-specific organizing
+### Phase 3A: Python Backend API (2-3 weeks)
 
-- [ ] **Batch operations**
-  - `batch-export "folder/*.md"` command
-  - `batch-import "E:\Note\Folder\*.note"` command
-  - Parallel processing for speed
+- [ ] **3A.1:** Create FastAPI server structure
+  - File: `obsidian_supernote/api/server.py`
+  - Basic server setup with CORS, static file serving
+  - Health check endpoint `/status`
 
-- [ ] **Change detection**
-  - MD5 hashing for file comparison
-  - Detect modifications in returned .note files
-  - Track sync state in database
+- [ ] **3A.2:** Implement conversion endpoints
+  - File: `obsidian_supernote/api/routes/convert.py`
+  - `POST /convert/md-to-note` - Single file conversion
+  - `POST /convert/note-to-md` - Export .note file
+  - `POST /batch/convert` - Batch conversion
 
-- [ ] **Sync database**
-  - SQLite database for state tracking
-  - File mappings (markdown → .note)
-  - Last sync timestamps
+- [ ] **3A.3:** Add WebSocket support
+  - File: `obsidian_supernote/api/websocket.py`
+  - Real-time progress updates during conversion
+  - Connection management for multiple clients
+
+- [ ] **3A.4:** Implement workflow endpoints
+  - File: `obsidian_supernote/api/routes/workflows.py`
+  - `GET /workflows` - List saved workflows
+  - `POST /workflows` - Create/update workflow
+  - `POST /workflows/{id}/run` - Execute workflow
+
+- [ ] **3A.5:** Add workflow storage
+  - File: `obsidian_supernote/workflows/storage.py`
+  - YAML-based workflow definitions
+  - SQLite for sync state tracking
+
+### Phase 3B: Web Dashboard MVP (2-3 weeks)
+
+- [ ] **3B.1:** Set up React project with Vite
+  - Directory: `web-dashboard/`
+  - TypeScript, Tailwind CSS, shadcn/ui
+
+- [ ] **3B.2:** Create pre-defined workflow UI
+  - Select from Daily Notes, Research, World Building
+  - Configure source/output folders
+  - Run workflow with progress display
+
+- [ ] **3B.3:** Add configuration panels
+  - Device selection (A5X, A5X2/Manta, etc.)
+  - Folder mappings
+  - Conversion options
+
+- [ ] **3B.4:** Implement sync status display
+  - Recent conversions list
+  - File mapping viewer
+  - Error/warning display
+
+### Phase 3C: Obsidian Plugin (2-3 weeks)
+
+- [ ] **3C.1:** Set up TypeScript plugin skeleton
+  - Directory: `obsidian-plugin/`
+  - manifest.json, main.ts structure
+
+- [ ] **3C.2:** Implement ribbon button and commands
+  - `Convert to Supernote` - Convert current file
+  - `Open Dashboard` - Open web dashboard
+  - `Sync All` - Execute default workflow
+
+- [ ] **3C.3:** Create settings tab
+  - Backend URL configuration
+  - Default device selection
+  - Workflow selection
+
+- [ ] **3C.4:** Add sidebar status view
+  - Connection status
+  - Pending files count
+  - Last sync time
+
+### Phase 3D: Visual Workflow Builder (3-4 weeks)
+
+- [ ] **3D.1:** Implement drag-and-drop designer
+  - React Flow integration
+  - Block library (source, transform, output)
+  - Connection validation
+
+- [ ] **3D.2:** Create building blocks
+  - Source blocks: Folder watch, single file, tag filter
+  - Transform blocks: MD→Note, Note→MD, PDF→Note
+  - Output blocks: Save to folder, update frontmatter
+
+- [ ] **3D.3:** Add workflow save/load
+  - YAML export/import
+  - Template library
+  - Share workflows
 
 ---
 
-## Phase 4+: Full Automation & Cloud Integration
+## Phase 4+: Advanced Features & Cloud Integration
 
-**Goal:** Seamless bi-directional sync with conflict resolution.
+**Goal:** Extended features including cloud sync and automation.
 
 ### Key Features
 
@@ -340,20 +434,20 @@ Result: Created note shows text recognition as user writes on device
   - Direct cloud sync without USB
   - Real-time change notifications
 
-- [ ] **Continuous sync**
-  - Background service for constant monitoring
-  - Instant sync on file changes
-  - No manual intervention needed
+- [ ] **Scheduled workflows**
+  - Cron-like scheduling
+  - Folder watching with debounce
+  - Background execution
 
 - [ ] **Conflict resolution**
   - Detect simultaneous edits
   - Intelligent merge strategies
   - User-guided resolution options
 
-- [ ] **Smart merging**
-  - Combine text edits with image annotations
-  - Preserve both sides of changes
-  - Version history maintained
+- [ ] **Advanced workflow features**
+  - Conditional logic blocks
+  - Variables and templates
+  - Webhook triggers
 
 ---
 
@@ -364,10 +458,14 @@ Result: Created note shows text recognition as user writes on device
 - **Rationale:** No separate config files, metadata travels with content, Obsidian-native
 - **Tradeoffs:** Requires parsing, optional fields need good defaults
 
-### 2. Cloud-Only Sync
-- **Decision:** Use Supernote Cloud API instead of USB/local folders
-- **Rationale:** More reliable, works across devices, no device mounting issues
-- **Tradeoffs:** Requires internet, Cloud subscription
+### 2. Hybrid UI Architecture (Phase 3)
+- **Decision:** Obsidian Plugin + Python Backend (FastAPI) + Web Dashboard (React)
+- **Rationale:**
+  - 100% reuse of existing Python converters (no port to TypeScript)
+  - Native Obsidian integration for quick actions
+  - Web dashboard for complex configuration and visual workflow building
+  - Separation of concerns: Plugin is lightweight, backend does heavy lifting
+- **Tradeoffs:** Requires running backend server, more moving parts
 
 ### 3. Device-Based Text Recognition
 - **Decision:** Use Supernote's built-in recognition (realtime notes) instead of external OCR
@@ -375,9 +473,14 @@ Result: Created note shows text recognition as user writes on device
 - **Tradeoffs:** Only works for realtime notes, depends on device implementation
 
 ### 4. Three Workflows Approach
-- **Decision:** Define three distinct workflows with three automation levels each
-- **Rationale:** Users have different needs, progressive automation reduces complexity
-- **Tradeoffs:** More configuration options, requires education
+- **Decision:** Define three distinct workflows with pre-defined templates
+- **Rationale:** Users have different needs, templates provide quick start
+- **Tradeoffs:** Custom workflows need visual builder (Phase 3D)
+
+### 5. Manual UI-Driven Operations
+- **Decision:** Replace background automation with user-triggered actions
+- **Rationale:** Users want visibility and control over sync operations
+- **Tradeoffs:** Slightly more user interaction required
 
 ---
 
@@ -464,20 +567,19 @@ Result: Created note shows text recognition as user writes on device
 
 | Phase | Feature | Effort | Timeline |
 |-------|---------|--------|----------|
-| 2 | Frontmatter properties | 2 weeks | Jan 20-Feb 3 |
-| 2 | .note update mode | 3-4 weeks | Feb 3-Feb 24 |
-| 2 | Realtime support | 1-2 weeks | Feb 24-Mar 3 |
-| 2 | Testing & docs | 1 week | Mar 3-Mar 10 |
-| 3 | File watching | 2 weeks | Mar 10-Mar 24 |
-| 3 | Change detection | 2 weeks | Mar 24-Apr 7 |
-| 3 | Sync database | 1 week | Apr 7-Apr 14 |
-| 3 | Batch operations | 1 week | Apr 14-Apr 21 |
-| 3 | Testing & docs | 1 week | Apr 21-Apr 28 |
-| 4+ | Cloud integration | 3-4 weeks | May onwards |
-| 4+ | Conflict resolution | 3-4 weeks | May onwards |
+| 2 | Frontmatter properties | 2 weeks | ✅ Complete |
+| 2 | .note update mode | 3-4 weeks | ✅ Complete |
+| 2 | Realtime support | 1-2 weeks | ✅ Complete |
+| 2 | Testing & docs | 1 week | ✅ Complete |
+| 3A | Python Backend API | 2-3 weeks | In Progress |
+| 3B | Web Dashboard MVP | 2-3 weeks | Planned |
+| 3C | Obsidian Plugin | 2-3 weeks | Planned |
+| 3D | Visual Workflow Builder | 3-4 weeks | Planned |
+| 4+ | Cloud integration | 3-4 weeks | Future |
+| 4+ | Advanced workflows | 3-4 weeks | Future |
 
-**Total Phase 2:** 6-8 weeks
-**Total Phase 3:** 8-10 weeks
+**Total Phase 2:** ✅ Complete
+**Total Phase 3:** 10-14 weeks
 **Total Phase 4+:** 6+ weeks
 
 ---

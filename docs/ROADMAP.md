@@ -1,23 +1,24 @@
 # Obsidian-Supernote Sync Roadmap
 
-**Last Updated:** 2026-01-22
-**Status:** Steps 1 & 2 Complete - Full Update Workflow Implemented
+**Last Updated:** 2026-01-24
+**Status:** Phase 3A Complete - Ready for Phase 3B (Web Dashboard)
 **PRD Location:** `C:\Edwin\Notes Vault\03 Projects\Obsidian-Supernote Sync\Obsidian-Supernote Sync Tool.md`
 
-## Recent Additions (2026-01-22)
+## Recent Additions (2026-01-24)
 
-- ✅ **Step 1 COMPLETE:** Frontmatter property parsing fully implemented
-  - ✅ `supernote.type` property (standard/realtime)
-  - ✅ `supernote.file` property with [x.note] notation
-  - ✅ Automatic markdown update after conversion
-  - ✅ New `md-to-note` CLI command
-  - ✅ 34 comprehensive tests (100% passing, 92% coverage)
-- ✅ **Step 2 COMPLETE:** .note file update mode (preserve annotations)
-  - ✅ Automatic detection from `supernote.file` property
-  - ✅ Extract and preserve handwriting (ZIP archive)
-  - ✅ Replace template while keeping annotations
-  - ✅ End-to-end tested workflow
-- ✅ Realtime note type support for annotation workflows
+- ✅ **Phase 3A COMPLETE:** Python Backend API
+  - ✅ FastAPI server with REST endpoints for all conversions
+  - ✅ WebSocket support for real-time progress updates
+  - ✅ Workflow management and execution
+  - ✅ `obsidian-supernote serve` CLI command
+  - ✅ Pre-defined workflows loaded from `examples/configs/`
+
+## Previous Completions
+
+- ✅ **Step 1:** Frontmatter property parsing (34 tests, 92% coverage)
+- ✅ **Step 2:** .note file update mode (preserves handwriting)
+- ✅ **Step 3:** Realtime note type support
+- ✅ **Step 4:** Configuration examples & documentation
 
 ## Phase Mapping
 
@@ -26,9 +27,9 @@
 | Phase 1: Research & Discovery | - | ✅ Complete |
 | Phase 2: Decision & Planning | - | ✅ Complete |
 | Phase 2.5: .note Format Research | Phase 1: Fix .note Generation | ✅ Complete |
-| Phase 3: Prototype Development | Phase 2: Complete Conversion Pipeline | 🔄 In Progress |
-| Phase 4: Testing & Refinement | - | Upcoming |
-| Phase 5: Production & Enhancement | Phase 3: Automated Sync | Planned |
+| Phase 3: Prototype Development | Phase 2: Manual CLI Complete | ✅ Complete |
+| Phase 4: Testing & Refinement | Phase 3A: Python Backend API | ✅ Complete |
+| Phase 5: Production & Enhancement | Phase 3B-D: UI & Workflow Builder | ⏳ Next |
 
 ## End Goal
 
@@ -176,46 +177,93 @@ obsidian-supernote note-to-md "Handwritten.note" "Handwritten.md"
 - Add `--output-dir` for batch processing
 - Add progress indicators for large files
 
-### PRD Phases 4-5: Testing, Refinement & Automated Sync (PLANNED)
+#### Step 4: Configuration Examples & Documentation ✅ COMPLETE (2026-01-24)
 
-**Goal:** Automatic synchronization without manual commands
+**Implemented:**
+- ✅ Workflow guides with step-by-step instructions
+  - `examples/workflows/daily-notes/README.md`
+  - `examples/workflows/research-notes/README.md`
+  - `examples/workflows/world-building/README.md`
+- ✅ Example templates and complete examples
+  - Templates for each workflow
+  - Filled-in examples showing real usage
+- ✅ Configuration files for future sync engine
+  - `examples/configs/daily-notes-config.yml`
+  - `examples/configs/research-notes-config.yml`
+  - `examples/configs/world-building-config.yml`
+- ✅ Updated main README with workflow table
 
-#### Step 3.1: File Watching
+### Phase 3: Hybrid UI Architecture (Phase 3A Complete)
 
-- Monitor Obsidian vault for markdown changes
-- Monitor Supernote sync folder for .note changes
-- Auto-convert on file changes
+**Goal:** User-friendly interface via Obsidian Plugin + Python Backend + Web Dashboard
 
-#### Step 3.2: Sync Engine
+#### Architecture
 
-```yaml
-# config.yml
-sync:
-  obsidian_vault: "C:/Edwin/Notes Vault"
-  supernote_folder: "C:/Users/Edwin/Supernote/Note"
-
-  # Folders to sync
-  mappings:
-    - obsidian: "02 Journal/Daily Notes"
-      supernote: "Personal/[02] Journal/Daily Notes"
-      direction: bidirectional
-
-    - obsidian: "03 Projects"
-      supernote: "Work/[03] Projects"
-      direction: obsidian_to_supernote
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    OBSIDIAN PLUGIN (TypeScript)                  │
+│  Ribbon icon, commands, sidebar status view                     │
+└─────────────────────┬───────────────────────────────────────────┘
+                      │ HTTP API
+                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 PYTHON BACKEND (FastAPI) ✅ COMPLETE             │
+│  REST API, WebSocket progress, serves web dashboard              │
+└─────────────────────┬───────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 WEB DASHBOARD (React)                            │
+│  Visual workflow designer, pre-defined templates, config         │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-#### Step 3.3: Conflict Resolution
+#### Phase 3A: Python Backend API (✅ Complete)
 
-- Detect when both sides have changes
-- Options: keep newest, keep both, manual merge
-- Track sync state in SQLite database
+```bash
+# Start backend server
+obsidian-supernote serve --port 8765
 
-#### Step 3.4: Cloud Integration (Optional)
+# API Endpoints:
+# GET  /status                - Health check and version
+# GET  /status/dependencies   - Check Pandoc, supernotelib, Pillow
+# POST /convert/md-to-note    - Convert markdown to .note
+# POST /convert/note-to-md    - Export .note to markdown
+# POST /convert/pdf-to-note   - Convert PDF to .note
+# POST /convert/png-to-note   - Convert PNG to .note
+# POST /convert/batch         - Batch conversion
+# GET  /workflows             - List saved workflows
+# POST /workflows/{id}/run    - Execute workflow
+# WS   /events                - Real-time progress updates
+```
 
-- Integrate with Supernote Cloud API
-- Sync without USB connection
-- Real-time sync when online
+**Files Created:**
+- `obsidian_supernote/api/server.py` - FastAPI app + WebSocket endpoint
+- `obsidian_supernote/api/websocket.py` - ConnectionManager + ProgressReporter
+- `obsidian_supernote/api/routes/convert.py` - Conversion endpoints
+- `obsidian_supernote/api/routes/workflows.py` - Workflow management
+- `obsidian_supernote/api/routes/status.py` - Health/status endpoints
+
+#### Phase 3B: Web Dashboard MVP (⏳ Next)
+
+- React + Vite + Tailwind CSS
+- Pre-defined workflow selection (Daily Notes, Research, World Building)
+- Configuration panels for folders and devices
+- Sync status display
+
+#### Phase 3C: Obsidian Plugin (Planned)
+
+- Ribbon button for quick actions
+- Commands: Convert, Open Dashboard, Sync All
+- Settings tab for backend URL
+- Sidebar status view
+
+#### Phase 3D: Visual Workflow Builder (Planned)
+
+- Drag-and-drop workflow designer
+- Building blocks: source, transform, output
+- Save/load custom workflows
+- Template library
 
 ## File Structure
 
@@ -226,17 +274,30 @@ obsidian-supernote-sync/
 │   ├── converters/
 │   │   ├── markdown_to_pdf.py    # MD → PDF
 │   │   ├── pandoc_converter.py   # Pandoc integration
-│   │   ├── note_writer.py        # PDF → .note (needs fixing)
+│   │   ├── note_writer.py        # PDF → .note
 │   │   └── note_to_obsidian.py   # .note → MD
 │   ├── parsers/
 │   │   └── note_parser.py        # .note file parsing
-│   └── sync/
-│       ├── sync_engine.py        # (Phase 3)
-│       └── state_tracker.py      # (Phase 3)
+│   ├── api/                      # NEW: FastAPI backend (Phase 3A)
+│   │   ├── server.py             # FastAPI app
+│   │   ├── routes/
+│   │   │   ├── convert.py        # Conversion endpoints
+│   │   │   ├── workflows.py      # Workflow management
+│   │   │   └── status.py         # Health/status
+│   │   └── websocket.py          # Real-time events
+│   └── workflows/                # NEW: Workflow engine (Phase 3A)
+│       ├── engine.py             # Workflow executor
+│       └── storage.py            # YAML/SQLite storage
+├── web-dashboard/                # NEW: React app (Phase 3B)
+│   ├── src/
+│   └── package.json
+├── obsidian-plugin/              # NEW: TypeScript plugin (Phase 3C)
+│   ├── src/
+│   └── manifest.json
 ├── examples/
+│   ├── workflows/                # Pre-defined workflow guides
 │   ├── templates/                # PNG/PDF templates
-│   ├── golden_sources/           # Reference .note files
-│   └── analysis/                 # Analysis scripts
+│   └── golden_sources/           # Reference .note files
 └── docs/
     ├── ROADMAP.md                # This file
     └── IMPLEMENTATION_STATUS.md  # Detailed status

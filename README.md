@@ -4,7 +4,7 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 
 ## Project Status
 
-**Current Phase:** Phase 1 Complete - Core Converters Working
+**Current Phase:** Phase 2 Complete (Steps 1-4) - Ready for Phase 3 (Sync Engine)
 **Version:** 0.2.0-alpha
 
 ## Features
@@ -12,29 +12,29 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 ### Working ✅
 
 - **Markdown → .note**: Convert Obsidian markdown directly to Supernote .note files (via Pandoc)
-  - ✨ **NEW:** Frontmatter support for `supernote.type` (standard/realtime)
-  - ✨ **NEW:** Auto-updates markdown with `supernote.file` reference using [x.note] notation
-  - ✨ **NEW:** Update mode - preserves handwriting when editing markdown and reconverting
-- **Markdown → PDF**: Convert Obsidian markdown to Supernote-optimized PDFs (via Pandoc)
-- **PDF → .note**: Convert PDFs to annotatable Supernote .note files (device-tested)
+  - ✅ Frontmatter support for `supernote.type` (standard/realtime)
+  - ✅ Auto-updates markdown with `supernote.file` reference
+  - ✅ **Update mode** - preserves handwriting when reconverting
+- **Markdown → PDF**: Convert Obsidian markdown to Supernote-optimized PDFs
+- **PDF → .note**: Convert PDFs to annotatable .note files (device-tested)
 - **PNG → .note**: Convert PNG templates to .note files (device-tested)
-- **.note → PNG**: Extract pages as PNG images (via supernotelib)
-- **.note → Markdown**: Export handwritten notes to Obsidian markdown
+- **.note → PNG**: Extract pages as PNG images
+- **.note → Markdown**: Export handwritten notes to Obsidian
 
-### Planned
+### Planned (Phase 3+)
 
+- File watching and automatic sync
 - Bi-directional sync with conflict detection
-- Cloud-based sync support with automatic change detection
-- Intelligent change detection using MD5 hashing
-- Text extraction from Supernote's built-in handwriting recognition (via supernotelib)
+- Cloud-based sync via Supernote Cloud API
+- Batch processing operations
 
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.10 or higher
-- **Pandoc** (for markdown to PDF conversion) - [Installation Guide](docs/PANDOC_SETUP.md)
-- Supernote device (A5X, A6X, or Nomad)
+- **Pandoc** (for markdown to PDF) - [Installation Guide](docs/PANDOC_SETUP.md)
+- Supernote device (A5X, A5X2/Manta, A6X, A6X2/Nomad)
 
 ### Installation
 
@@ -45,62 +45,80 @@ cd obsidian-supernote-sync
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+venv\Scripts\activate  # On Windows
+# source venv/bin/activate  # On macOS/Linux
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Usage
+### Basic Usage
 
 ```bash
-# Convert markdown directly to .note (with frontmatter support)
-python -m obsidian_supernote.cli md-to-note input.md output.note
+# Convert markdown to .note (recommended)
+obsidian-supernote md-to-note input.md output.note
 
-# Convert markdown to PDF for Supernote
-python -m obsidian_supernote.cli md-to-pdf input.md output.pdf
+# Convert .note to markdown with images
+obsidian-supernote note-to-md input.note output.md
 
-# Convert Supernote note to markdown
-python -m obsidian_supernote.cli note-to-md input.note output.md
-
-# Full sync (coming soon)
-python -m obsidian_supernote.cli sync --config config.yml
+# Other commands
+obsidian-supernote md-to-pdf input.md output.pdf
+obsidian-supernote pdf-to-note input.pdf output.note
+obsidian-supernote inspect input.note
 ```
 
-### Frontmatter Properties
+## Workflow Guides
 
-Add optional properties to your markdown files to control conversion:
+Choose the workflow that matches your use case:
+
+| Workflow | Note Type | Best For | Guide |
+|----------|-----------|----------|-------|
+| **Daily Notes** | `realtime` | Journaling, to-do lists, quick notes | [Guide](examples/workflows/daily-notes/) |
+| **Research Notes** | `realtime` | Article annotations, study materials | [Guide](examples/workflows/research-notes/) |
+| **World Building** | `standard` | Sketches, maps, character designs | [Guide](examples/workflows/world-building/) |
+
+### Note Types Explained
+
+- **`realtime`**: Enables Supernote's handwriting recognition. Use when capturing text that should be searchable.
+- **`standard`**: Pure sketching mode. Use for visual work without text recognition.
+
+## Frontmatter Properties
+
+Add these optional properties to your markdown files:
 
 ```yaml
 ---
-title: "My Daily Note"
+title: "My Note"
 supernote.type: realtime  # or "standard" (default)
 ---
 ```
 
-After conversion, the markdown is automatically updated with a file reference:
+After conversion, the markdown is automatically updated:
+
 ```yaml
 ---
-title: "My Daily Note"
+title: "My Note"
 supernote.type: realtime
 supernote.file: "[output/my-note.note]"  # Auto-added
 ---
 ```
 
-### Update Workflow - Preserve Handwriting
+## Update Workflow (Preserve Handwriting)
 
-The tool automatically detects when you're updating an existing .note file:
-
-1. **First conversion:** Creates new .note, adds `supernote.file` to markdown
-2. **Add handwriting:** Write on your Supernote device
-3. **Edit markdown:** Update text content in Obsidian
-4. **Reconvert:** Run same command → **handwriting is automatically preserved!**
+The killer feature: update your markdown content without losing handwritten annotations!
 
 ```bash
-# Edit markdown content
+# 1. First conversion - creates .note file
 obsidian-supernote md-to-note daily.md output/daily.note
 
-# Output shows:
+# 2. Write on Supernote device (add handwriting)
+
+# 3. Edit markdown in Obsidian (update text content)
+
+# 4. Reconvert - handwriting is preserved!
+obsidian-supernote md-to-note daily.md output/daily.note
+
+# Output:
 # "Update mode: Found existing .note file"
 # "Preserving handwriting from 2 pages"
 # "Update complete - handwriting preserved!"
@@ -112,12 +130,16 @@ obsidian-supernote md-to-note daily.md output/daily.note
 obsidian-supernote-sync/
 ├── obsidian_supernote/       # Main package
 │   ├── converters/           # File conversion modules
-│   ├── sync/                 # Sync engine
 │   ├── parsers/              # File format parsers
-│   └── cli.py               # Command-line interface
+│   ├── sync/                 # Sync engine (Phase 3)
+│   ├── utils/                # Utilities (frontmatter parsing)
+│   └── cli.py                # Command-line interface
+├── examples/
+│   ├── workflows/            # Step-by-step workflow guides
+│   ├── configs/              # Configuration examples
+│   └── templates/            # PNG/PDF templates
 ├── tests/                    # Unit and integration tests
 ├── docs/                     # Documentation
-├── examples/                 # Example files and configs
 └── requirements.txt          # Python dependencies
 ```
 
@@ -127,34 +149,33 @@ obsidian-supernote-sync/
 
 ```bash
 pytest tests/
+pytest --cov  # With coverage
 ```
 
 ### Code Style
 
-This project uses:
-- `black` for code formatting
-- `ruff` for linting
-- `mypy` for type checking
-
 ```bash
-# Format code
-black obsidian_supernote/
-
-# Run linter
-ruff check obsidian_supernote/
-
-# Type checking
-mypy obsidian_supernote/
+black obsidian_supernote/     # Format code
+ruff check obsidian_supernote/ # Lint
+mypy obsidian_supernote/       # Type check
 ```
 
 ## Documentation
 
-For detailed documentation, see:
+- [Workflow Guides](examples/workflows/) - Step-by-step usage guides
 - [Project Roadmap](docs/ROADMAP.md) - Development phases and goals
 - [Implementation Status](docs/IMPLEMENTATION_STATUS.md) - Current feature status
-- [Frontmatter Properties](docs/FRONTMATTER_PROPERTIES.md) - Markdown frontmatter reference
-- [Pandoc Setup](docs/PANDOC_SETUP.md) - Installing Pandoc for PDF conversion
-- [Testing Notes](docs/TESTING_NOTES.md) - Testing documentation
+- [Frontmatter Properties](docs/FRONTMATTER_PROPERTIES.md) - Frontmatter reference
+- [Pandoc Setup](docs/PANDOC_SETUP.md) - Installing Pandoc
+
+## Supported Devices
+
+| Device | Model | Resolution | Status |
+|--------|-------|------------|--------|
+| A5X2 | Manta | 1920 x 2560 | ✅ Tested |
+| A5X | - | 1404 x 1872 | ✅ Supported |
+| A6X2 | Nomad | 1404 x 1872 | ✅ Supported |
+| A6X | - | 1404 x 1872 | ✅ Supported |
 
 ## Related Projects
 

@@ -1,0 +1,100 @@
+# Research Notes Workflow Configuration
+# Use this config for annotating articles and study materials
+#
+# Recommended .note type: REALTIME
+# - Captures margin notes and annotations as searchable text
+# - Ideal for highlighting, commenting, and note-taking on documents
+#
+# Usage:
+#   obsidian-supernote sync --config examples/configs/research-notes-config.yml
+
+# Workflow Settings
+workflow:
+  name: "Research/Study Notes Flow"
+  description: "Annotate research articles on Supernote, import annotations to Obsidian"
+  note_type: realtime  # Capture annotation text
+
+# Paths
+paths:
+  # Your Obsidian vault location
+  obsidian_vault: "C:/Users/YourName/ObsidianVault"
+
+  # Research notes folder within vault
+  research_folder: "02 Reading"
+
+  # Supernote sync folder
+  supernote_folder: "/Note/Reading"
+
+  # Where to store converted files
+  output_folder: "output/reading"
+
+# File Naming
+naming:
+  # Keep original filename, change extension
+  preserve_filename: true
+
+  # Or use custom pattern
+  # supernote_pattern: "{title}.note"
+
+# Tag-Based Export (Phase 3 - future)
+tags:
+  # Only export notes with this tag
+  export_tag: "to-supernote"
+
+  # Tag to add after successful sync
+  synced_tag: "synced-to-supernote"
+
+  # Remove export tag after sync
+  remove_export_tag: true
+
+# Conversion Settings
+conversion:
+  device: A5X2
+
+  # PDF settings optimized for reading
+  page_size: A5
+  margin: "1.5cm"
+  font_size: 10
+
+  # Include metadata header in PDF
+  include_header: true
+  header_format: "{title} | {author}"
+
+# Frontmatter Defaults
+frontmatter_defaults:
+  supernote.type: realtime
+
+# Annotation Import Settings
+import:
+  # Where to place imported annotation images
+  image_folder: "assets/annotations"
+
+  # Embed images in markdown
+  embed_images: true
+
+  # Image format
+  image_format: png
+  image_dpi: 300
+
+  # Create separate annotation file or append to original
+  annotation_mode: append  # Options: append, separate, replace
+
+# Sync Behavior (Phase 3 - future)
+sync:
+  direction: bidirectional
+  auto_sync: false
+  poll_interval: "15m"
+  conflict_resolution: manual  # Research notes often need manual review
+
+# Update Mode
+update:
+  preserve_annotations: true
+  backup_before_update: true
+
+  # When article content changes significantly
+  handle_major_changes: warn  # Options: warn, backup, abort
+
+# Logging
+logging:
+  level: INFO
+  show_progress: true
