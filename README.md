@@ -4,8 +4,15 @@ A bi-directional synchronization tool between Obsidian vault and Supernote devic
 
 ## Project Status
 
-**Current Phase:** Phase 2 Complete (Steps 1-4) - Ready for Phase 3 (Sync Engine)
-**Version:** 0.2.0-alpha
+**Current Phase:** Phase 3B Complete - Ready for Phase 3C (Obsidian Plugin)
+**Version:** 0.3.0-alpha
+
+### Phase 3 Progress
+
+- ✅ **Phase 3A**: Python Backend API (FastAPI with WebSocket support)
+- ✅ **Phase 3B**: Web Dashboard MVP (React + Tailwind)
+- ⏳ **Phase 3C**: Obsidian Plugin (next)
+- ⏳ **Phase 3D**: Visual Workflow Builder (planned)
 
 ## Features
 
@@ -65,6 +72,36 @@ obsidian-supernote note-to-md input.note output.md
 obsidian-supernote md-to-pdf input.md output.pdf
 obsidian-supernote pdf-to-note input.pdf output.note
 obsidian-supernote inspect input.note
+```
+
+### API Server & Web Dashboard
+
+Start the backend API server for the web dashboard and automation:
+
+```bash
+# Start the API server
+obsidian-supernote serve
+
+# With custom port
+obsidian-supernote serve --port 8080
+
+# Development mode with auto-reload
+obsidian-supernote serve --reload
+```
+
+The server provides:
+- **REST API** at `http://localhost:8765/` - All conversion endpoints
+- **API Docs** at `http://localhost:8765/docs` - Interactive Swagger UI
+- **WebSocket** at `ws://localhost:8765/events` - Real-time progress updates
+
+To use the web dashboard:
+
+```bash
+# Build the dashboard (first time only)
+cd web-dashboard && npm install && npm run build && cd ..
+
+# Start server with dashboard
+obsidian-supernote serve --dashboard web-dashboard/dist
 ```
 
 ## Workflow Guides
