@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { Workflow, WorkflowRun } from '../types';
+import type { Workflow, WorkflowRunResult } from '../types';
 
 interface WorkflowCardProps {
   workflow: Workflow;
-  onRun: (id: string) => Promise<WorkflowRun>;
+  onRun: (id: string) => Promise<WorkflowRunResult>;
 }
 
 const WORKFLOW_ICONS: Record<string, string> = {
@@ -46,7 +46,7 @@ export function WorkflowCard({ workflow, onRun }: WorkflowCardProps) {
           {/* Workflow Details */}
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
-              Trigger: {workflow.trigger}
+              Type: {workflow.note_type}
             </span>
             {workflow.device && (
               <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
@@ -57,22 +57,6 @@ export function WorkflowCard({ workflow, onRun }: WorkflowCardProps) {
               {workflow.steps.length} step{workflow.steps.length !== 1 ? 's' : ''}
             </span>
           </div>
-
-          {/* Source/Output folders */}
-          {(workflow.source_folder || workflow.output_folder) && (
-            <div className="mt-2 text-xs text-gray-400 space-y-1">
-              {workflow.source_folder && (
-                <div className="truncate" title={workflow.source_folder}>
-                  Source: {workflow.source_folder}
-                </div>
-              )}
-              {workflow.output_folder && (
-                <div className="truncate" title={workflow.output_folder}>
-                  Output: {workflow.output_folder}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Error message */}
           {error && (

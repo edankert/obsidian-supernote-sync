@@ -36,29 +36,30 @@ export interface BatchConversionResult {
 
 export interface WorkflowStep {
   type: string;
+  action: string;
   config: Record<string, unknown>;
 }
 
 export interface Workflow {
   id: string;
   name: string;
-  description: string;
-  trigger: 'manual' | 'on_save' | 'scheduled' | 'tag';
+  description: string | null;
+  note_type: 'standard' | 'realtime';
+  device: string;
   steps: WorkflowStep[];
-  source_folder?: string;
-  output_folder?: string;
-  device?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface WorkflowRun {
+export interface WorkflowRunResult {
   workflow_id: string;
-  status: 'running' | 'completed' | 'failed';
-  started_at: string;
-  completed_at?: string;
+  success: boolean;
   files_processed: number;
   files_succeeded: number;
   files_failed: number;
   errors: string[];
+  output_files: string[];
+  dry_run: boolean;
 }
 
 // WebSocket Event Types

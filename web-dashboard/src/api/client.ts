@@ -4,7 +4,7 @@ import type {
   ConversionResult,
   BatchConversionResult,
   Workflow,
-  WorkflowRun,
+  WorkflowRunResult,
   DeviceType,
 } from '../types';
 
@@ -129,8 +129,67 @@ export async function getWorkflow(id: string): Promise<Workflow> {
   return fetchJson<Workflow>(`/workflows/${id}`);
 }
 
-export async function runWorkflow(id: string): Promise<WorkflowRun> {
-  return fetchJson<WorkflowRun>(`/workflows/${id}/run`, {
+export interface WorkflowRunRequest {
+  input_paths?: string[];
+  output_dir?: string;
+  dry_run?: boolean;
+}
+
+export async function runWorkflow(id: string, request: WorkflowRunRequest = {}): Promise<WorkflowRunResult> {
+  return fetchJson<WorkflowRunResult>(`/workflows/${id}/run`, {
     method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+// File browsing endpoints
+export interface FileInfo {
+  name: string;
+  path: string;
+  is_dir: boolean;
+  size: number | null;
+  extension: string | null;
+}
+
+export interface BrowseResponse {
+  current_path: string;
+  parent_path: string | null;
+  items: FileInfo[];
+}
+
+export interface DriveInfo {
+  path: string;
+  name: string;
+}
+
+export async function browseFiles(path?: string, filterExt?: string): Promise<BrowseResponse> {
+  const params = new URLSearchParams();
+  if (path) params.set('path', path);
+  if (filterExt) params.set('filter_ext', filterExt);
+  const query = params.toString();
+  return fetchJson<BrowseResponse>(`/browse${query ? `?${query}` : ''}`);
+}
+
+export async function listDrives(): Promise<DriveInfo[]> {
+  return fetchJson<DriveInfo[]>('/drives');
+}
+
+// Native file dialog
+export interface FileDialogRequest {
+  mode: 'file' | 'directory';
+  title?: string;
+  initial_dir?: string;
+  file_types?: [string, string][]; // [name, pattern] pairs, e.g., ["Markdown", "*.md"]
+}
+
+export interface FileDialogResponse {
+  selected: boolean;
+  path: string | null;
+}
+
+export async function openFileDialog(request: FileDialogRequest): Promise<FileDialogResponse> {
+  return fetchJson<FileDialogResponse>('/file-dialog', {
+    method: 'POST',
+    body: JSON.stringify(request),
   });
 }
