@@ -1,0 +1,15 @@
+/* Supernote Sync Plugin Styles */
+
+/* Status bar styling */
+.supernote-status-connected {
+  color: var(--text-success);
+}
+
+.supernote-status-disconnected {
+  color: var(--text-error);
+}
+
+/* Ribbon icon hover effect */
+.side-dock-ribbon-action[aria-label="Supernote Sync"]:hover {
+  color: var(--interactive-accent);
+}

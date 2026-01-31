@@ -1,0 +1,10 @@
+{
+  "id": "supernote-sync",
+  "name": "Supernote Sync",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "Sync markdown notes with Supernote devices. Convert between .md and .note formats.",
+  "author": "Obsidian-Supernote Sync",
+  "authorUrl": "https://github.com/edwindankert/obsidian-supernote-sync",
+  "isDesktopOnly": true
+}
