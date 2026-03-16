@@ -28,3 +28,7 @@ This directory contains **normative instructions** for how documentation and aut
 - Traceability: `TRACEABILITY.md`
 - Decisions/ADRs: `DECISIONS.md`
 - Quality/close-out: `QUALITY.md`
+- Hook contracts: `HOOKS.md`
+- Handoff/recovery: `HANDOFF.md`
+- Syncing template updates: `SYNCING.md`
+- Importing: `IMPORTING.md`

@@ -22,6 +22,7 @@ Primary entrypoints for this documentation system.
 - Risks dashboard: `dashboards/Risks.md`
 - Tests dashboard: `dashboards/Tests.md`
 - Workflows dashboard: `dashboards/Workflows.md`
+- Releases dashboard: `dashboards/Releases.md`
 - Workflows: `[[workflows/README]]`
 - Lifecycle rules: `../tools/instructions/LIFECYCLE.md`
 - Snapshot rules: `../tools/instructions/SNAPSHOT.md`
@@ -49,4 +50,5 @@ Bases (`*.base`) used for dashboard views in Obsidian (optional):
 - Risks: `[[Risks.base]]`
 - Changes: `[[Changes.base]]`
 - Tests: `[[Tests.base]]`
+- Releases: `[[Releases.base]]`
 - Workflows: `[[Workflows.base]]`

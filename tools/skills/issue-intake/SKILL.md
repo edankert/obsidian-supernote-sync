@@ -38,5 +38,13 @@ tags: [skills, issues]
    - ensure there is a parent `FEAT-*` (create if needed)
    - create one or more `TASK-*` under the feature and link them in snapshot + notes
    - tasks inherit phase from the issue or parent feature
-6. Run a quick risk scan (use `../risk-scan/SKILL.md`) if the issue implies contract/dependency changes.
-7. If verification is needed, create a `TST-*` note (use `../test-authoring/SKILL.md`) and link it from the issue/task/requirement as appropriate.
+6. **Impact analysis (mandatory for issues affecting existing features):**
+   - If the issue links to existing features: run `../impact-analysis/SKILL.md` to check whether the proposed fix or change may conflict with existing requirements on those features.
+   - If conflicts are found: STOP and present resolution options to the user before proceeding.
+   - If no conflicts or no linked features: note "Impact analysis complete — no conflicts" and proceed.
+7. **Risk scan (mandatory check):**
+   - Review the issue against risk scan triggers (see `../../instructions/LIFECYCLE.md` — Risk scan triggers section).
+   - Check for: new dependencies, new env vars, path changes, performance changes, security/credential exposure.
+   - If ANY trigger applies: run `../risk-scan/SKILL.md` and create/update `RISK-*` notes.
+   - If no triggers apply: note "No new risks identified" and proceed.
+8. If verification is needed, create a `TST-*` note (use `../test-authoring/SKILL.md`) and link it from the issue/task/requirement as appropriate.

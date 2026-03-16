@@ -28,6 +28,9 @@ This documentation system relies on explicit link graphs so agents can follow re
   - Should link mitigation tasks or the items it impacts.
 - Change (`[[change]]`)
   - Should link `issues` and `features` impacted by the change.
+- Release (`[[release]]`)
+  - Must link `features` included and `tests_verified` for the release.
+  - Should link `changes` and `previous_release` for continuity.
 - Decision (`[[adr]]`)
   - Should link related items and use `supersedes`/`superseded` when applicable.
 

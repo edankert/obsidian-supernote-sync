@@ -35,6 +35,7 @@ counters:
   FEAT: 6
   ISS: 0
   REQ: 6
+  REL: 0
   RISK: 3
   TASK: 12
   TST: 5
@@ -121,104 +122,7 @@ items:
       release: ""
 
   tasks:
-    TASK-0001:
-      file: "docs/features/FEAT-0001-Manual-CLI-Frontmatter.md"
-      title: "Implement frontmatter property parsing"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0001"
-      effort: "M"
-      tests: ["TST-0001"]
-
-    TASK-0002:
-      file: "docs/features/FEAT-0001-Manual-CLI-Frontmatter.md"
-      title: "Implement .note file update mode"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0001"
-      effort: "L"
-      tests: []
-
-    TASK-0003:
-      file: "docs/features/FEAT-0001-Manual-CLI-Frontmatter.md"
-      title: "Add realtime recognition support"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0001"
-      effort: "S"
-      tests: []
-
-    TASK-0004:
-      file: "docs/features/FEAT-0001-Manual-CLI-Frontmatter.md"
-      title: "Create configuration examples and documentation"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0001"
-      effort: "M"
-      tests: []
-
-    TASK-0005:
-      file: "docs/features/FEAT-0002-Python-Backend-API.md"
-      title: "Create FastAPI server structure"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0002"
-      effort: "M"
-      tests: []
-
-    TASK-0006:
-      file: "docs/features/FEAT-0002-Python-Backend-API.md"
-      title: "Implement conversion endpoints"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0002"
-      effort: "M"
-      tests: []
-
-    TASK-0007:
-      file: "docs/features/FEAT-0002-Python-Backend-API.md"
-      title: "Add WebSocket support for progress"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0002"
-      effort: "M"
-      tests: []
-
-    TASK-0008:
-      file: "docs/features/FEAT-0002-Python-Backend-API.md"
-      title: "Implement workflow endpoints"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0002"
-      effort: "M"
-      tests: []
-
-    TASK-0009:
-      file: "docs/features/FEAT-0003-Web-Dashboard-MVP.md"
-      title: "Set up React + Vite + Tailwind project"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0003"
-      effort: "S"
-      tests: []
-
-    TASK-0010:
-      file: "docs/features/FEAT-0003-Web-Dashboard-MVP.md"
-      title: "Create workflow UI and configuration panels"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0003"
-      effort: "L"
-      tests: []
-
-    TASK-0011:
-      file: "docs/features/FEAT-0004-Obsidian-Plugin.md"
-      title: "Set up TypeScript plugin skeleton"
-      status: "done"
-      owner: "Edwin"
-      parent: "FEAT-0004"
-      effort: "S"
-      tests: []
+    # Pruned: TASK-0001 through TASK-0011 (all done). Notes preserved in docs/features/.
 
     TASK-0012:
       file: "docs/features/FEAT-0004-Obsidian-Plugin.md"
@@ -560,6 +464,7 @@ items:
         - "Reduced from 6 to 2 properties"
       features: ["FEAT-0001"]
 
+  releases: {}
   decisions:
     ADR-0001:
       file: "docs/decisions/ADR-0001-Frontmatter-Approach.md"
@@ -618,10 +523,12 @@ metrics:
     features_done: 3
     tasks_total: 12
     tasks_done: 11
+    tasks_pruned: 11
     tests_total: 5
     tests_passing: 4
     tests_failing: 0
     issues_open: 0
     issues_triage: 0
     risks_open: 3
+    releases_total: 0
     decisions_total: 3

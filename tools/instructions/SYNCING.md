@@ -15,6 +15,7 @@ Use this when the project-os template lives outside the dev repo and you want to
 ## Template-owned (safe to sync)
 - `tools/instructions/`
 - `tools/skills/`
+- `tools/adapters/`
 - `docs/__templates__/`
 - `docs/__bases__/`
 - `docs/README.md`

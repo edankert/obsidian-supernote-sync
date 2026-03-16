@@ -1,13 +1,3 @@
----
-type: instruction
-id: INSTR-LIFECYCLE
-status: active
-owner: group:maintainers
-created: 2026-01-27
-updated: 2026-01-27
-tags: [instructions, lifecycle]
----
-
 # Lifecycle rules (LLM-maintained documentation system)
 
 This documentation system is designed to be maintained by an LLM across the full lifecycle of work: intake → plan → implement → verify → close.
@@ -29,17 +19,25 @@ This documentation system is designed to be maintained by an LLM across the full
 ## Preflight (must happen before code changes)
 When a prompt implies work (bugfix, feature, refactor, behavior change):
 1. **Classify** the prompt as one (or more) of: issue, feature, requirement, risk, chore/docs-only.
-2. **Update `../../SNAPSHOT.yaml` first**:
+2. **Orchestration check** (multi-agent projects):
+   - If your orchestration layer (e.g., Claude Code Agent Teams, Codex parallel) assigns a specific task, verify it exists in `../../SNAPSHOT.yaml` and that its status allows work (e.g., `backlog`, `next`, not already `done`).
+   - If working without orchestration, select work based on `focus` and item statuses.
+3. **Update `../../SNAPSHOT.yaml` first**:
    - allocate IDs (increment `counters`)
    - create/update `items.*` entries and relationships
    - set `focus` to the active work
-3. **Create/update the relevant notes (from templates)**:
+4. **Create/update the relevant notes (from templates)**:
    - Issue: `../../docs/issues/ISS-####-*.md`
    - Requirement: `../../docs/requirements/REQ-####-*.md`
    - Feature: `../../docs/features/<slug>/FEAT-####-*.md` plus `plan/PLAN.md`
    - Task: `../../docs/features/<slug>/plan/tasks/TASK-####-*.md` (must have `parent`)
    - Risk: `../../docs/risks/RISK-####-*.md`
-4. Ensure note frontmatter is consistent with the snapshot (IDs/statuses/links) so Bases dashboards reflect reality.
+5. **Impact analysis** (when creating or modifying requirements):
+   - Run `../skills/impact-analysis/SKILL.md` to check for tensions with existing requirements on overlapping features.
+   - If conflicts are found: STOP and present resolution options to the user before proceeding with implementation.
+6. Ensure note frontmatter is consistent with the snapshot (IDs/statuses/links) so Bases dashboards reflect reality.
+7. For multi-platform projects: set `platform` in new notes when work is platform-specific.
+   Infer from parent item, code paths, or tags. Leave empty if truly cross-cutting.
 
 If the prompt is purely a question/explanation (no work requested), you may skip preflight.
 
@@ -75,6 +73,26 @@ After completing a task/issue/feature:
 4. If new hazards were introduced (new dependency, env var, contract), add/update a `RISK-*` and link it.
 5. Do not delete completed notes; use status + links to preserve history.
 6. Apply verification gating (see `QUALITY.md`): only close/verify/done when required `[[test]]` notes are `status: passing`.
+7. **Acceptance test maintenance** (see `TESTING.md`):
+   - After implementing a feature: ensure Tier 1 acceptance tests exist for the user-visible behavior.
+   - After fixing an issue: create a Tier 2 regression test that reproduces the original bug scenario.
+   - After any code change: uncheck acceptance tests whose scope overlaps with the changed code.
+
+## Release (must happen before shipping)
+When preparing a release:
+1. **Triage open issues:** For each open `ISS-*`, decide: fix before release, or ship as known issue.
+2. **Verify acceptance tests:** All Tier 1 and Tier 2 tests must be checked (passing). See `QUALITY.md` for gating rules.
+3. **Create release note:** `../../docs/releases/REL-####-v<version>.md` from template. Include scope (features, fixed issues), known issues, verification summary, and user-facing release notes.
+4. **Update SNAPSHOT:** Add `items.releases.<REL-ID>`, set `focus.release`, increment `counters.REL`.
+5. **Version bump:** Update the application version (versionCode + versionName or equivalent).
+6. **Build:** Create signed release artifact.
+7. **Tag:** `git tag -a v<version> -m "Release <version>"` and push.
+
+After release is deployed:
+1. Update `REL-*` status to `published`.
+2. Remove Tier 3 acceptance tests (verified by unit tests).
+3. Clear SNAPSHOT focus and set to next milestone.
+4. Open issues become the backlog for the next release.
 
 ## Snapshot retention (active + recent)
 - Keep `../../SNAPSHOT.yaml` focused on active + recent items.

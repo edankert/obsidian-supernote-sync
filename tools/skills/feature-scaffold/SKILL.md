@@ -42,5 +42,15 @@ tags: [skills, features]
    - feature note: `../../../docs/__templates__/feature.md` (set `phase` in frontmatter)
    - plan: concise sequence for delivery
    - tasks: each with clear DoD and inherited `phase` from feature
-6. Run a risk scan if this feature introduces new dependencies/contracts.
-7. If the feature requires verification, create `TST-*` notes (use `../test-authoring/SKILL.md`) and link them from the feature/requirements/tasks.
+6. **Impact analysis (mandatory for features with requirements):**
+   - Run `../impact-analysis/SKILL.md` against any new or linked requirements.
+   - Identify which existing features share the same component or user-facing area.
+   - Check for tensions between the new feature's requirements and existing requirements on overlapping features.
+   - If conflicts are found: STOP and present resolution options to the user before proceeding.
+   - If no conflicts: note "Impact analysis complete — no conflicts" and proceed.
+7. **Risk scan (mandatory check):**
+   - Review the feature against risk scan triggers (see `../../instructions/LIFECYCLE.md` — Risk scan triggers section).
+   - Check for: new dependencies, new env vars, path changes, performance changes, security/credential exposure.
+   - If ANY trigger applies: run `../risk-scan/SKILL.md` and create/update `RISK-*` notes.
+   - If no triggers apply: note "No new risks identified" and proceed.
+8. If the feature requires verification, create `TST-*` notes (use `../test-authoring/SKILL.md`) and link them from the feature/requirements/tasks.

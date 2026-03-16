@@ -28,6 +28,7 @@ Reusable playbooks for an LLM (or other agents) to keep this documentation syste
 - Feature scaffold: `feature-scaffold/SKILL.md`
 - Task breakdown: `task-breakdown/SKILL.md`
 - Test authoring: `test-authoring/SKILL.md`
+- Impact analysis: `impact-analysis/SKILL.md`
 - Risk scan: `risk-scan/SKILL.md`
 - Change note: `change-note/SKILL.md`
 - Snapshot sync: `snapshot-sync/SKILL.md`
@@ -40,3 +41,5 @@ Reusable playbooks for an LLM (or other agents) to keep this documentation syste
 - Project init: `project-init/SKILL.md`
 - Project derive (existing project import): `project-derive/SKILL.md`
 - Ad-hoc prompt intake: `ad-hoc-intake/SKILL.md`
+- Release verification: `release-verification/SKILL.md`
+- Adapter sync: `adapter-sync/SKILL.md`

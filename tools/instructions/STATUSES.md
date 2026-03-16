@@ -1,13 +1,3 @@
----
-type: instruction
-id: INSTR-STATUSES
-status: active
-owner: group:maintainers
-created: 2026-01-27
-updated: 2026-01-27
-tags: [instructions, statuses]
----
-
 # Status taxonomies and transitions
 
 This file defines the allowed `status` values and recommended transitions for each note type.
@@ -56,6 +46,13 @@ If a project needs different states, update this file and the templates in `../.
   - `proposed` → `accepted`
   - `accepted` → `superseded`
   - `proposed` → `rejected`
+
+## `[[release]]`
+- Allowed: `draft`, `staged`, `published`, `rolled-back`
+- Typical transitions:
+  - `draft` → `staged` → `published`
+  - `draft` → `published` (skip staging for direct deployment)
+  - `published` → `rolled-back`
 
 ## `[[test]]`
 - Allowed: `draft`, `ready`, `passing`, `failing`, `blocked`, `deprecated`
