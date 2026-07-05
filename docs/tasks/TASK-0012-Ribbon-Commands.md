@@ -1,8 +1,9 @@
 ---
 type: "[[task]]"
 id: TASK-0012
+aliases: ["TASK-0012"]
 title: "Implement Ribbon Button and Commands"
-status: in-progress
+status: doing
 phase: 3C
 owner: Edwin
 created: 2026-01-25
@@ -10,6 +11,7 @@ updated: 2026-01-31
 source:
   - "PLAN.md"
 parent: "[[FEAT-0004-Obsidian-Plugin]]"
+fixes: []
 effort: M
 depends:
   - "[[TASK-0011-Plugin-Skeleton]]"

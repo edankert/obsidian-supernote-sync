@@ -1,5 +1,5 @@
 version: 1
-updated: "2026-01-31T16:00:00Z"
+updated: "2026-07-05T00:00:00Z"
 
 template:
   replace_me: false
@@ -31,7 +31,7 @@ docs_system:
 counters:
   ADR: 3
   CHG:
-    last_date: 20260131
+    last_date: 20260705
   FEAT: 6
   ISS: 0
   REQ: 6
@@ -125,7 +125,7 @@ items:
     # Pruned: TASK-0001 through TASK-0011 (all done). Notes preserved in docs/features/.
 
     TASK-0012:
-      file: "docs/features/FEAT-0004-Obsidian-Plugin.md"
+      file: "docs/tasks/TASK-0012-Ribbon-Commands.md"
       title: "Implement ribbon button and commands"
       status: "doing"
       owner: "Edwin"
@@ -416,6 +416,19 @@ items:
         - "WebSocket at ws://localhost:8765/events"
 
   changes:
+    CHG-20260705-Adopt-Mechanical-Verification:
+      file: "docs/changes/CHG-20260705-Adopt-Mechanical-Verification.md"
+      title: "Adopt mechanical verification from project-os template"
+      status: "merged"
+      owner: "Edwin"
+      commit: ""
+      pr: ""
+      impacts:
+        - "tools/scripts/"
+        - "tools/adapters/claude-code/"
+        - ".github/workflows/validate-docs.yml"
+      features: []
+
     CHG-20260131-Phase3B:
       file: "docs/changes/CHG-20260131-Phase3B-Web-Dashboard.md"
       title: "Implement Phase 3B: Web Dashboard MVP"

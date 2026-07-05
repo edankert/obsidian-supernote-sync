@@ -64,6 +64,8 @@ These files contain detailed rules. Read them when performing the related operat
 - Test authoring: tools/skills/test-authoring/SKILL.md
 - ADR authoring: tools/skills/adr-authoring/SKILL.md
 - Risk scan: tools/skills/risk-scan/SKILL.md
+- Independent review: tools/skills/independent-review/SKILL.md
+- Docs audit: tools/skills/docs-audit/SKILL.md
 - Ad-hoc intake: tools/skills/ad-hoc-intake/SKILL.md
 - Workflow authoring: tools/skills/workflow-authoring/SKILL.md
 - Backlog grooming: tools/skills/backlog-grooming/SKILL.md
@@ -108,22 +110,22 @@ If `.claude/settings.json` already exists with other settings, merge the `hooks`
 
 Ensure hook scripts are executable: `chmod +x tools/adapters/claude-code/hooks/*.sh`
 
+> **Note:** Hook commands use `$CLAUDE_PROJECT_DIR` for reliable path resolution. Claude Code does not guarantee hooks run from the project root, so relative paths are unreliable.
+
 ### Hook events and types
 
 | Event | Hooks | Type | Purpose |
 |---|---|---|---|
-| `PreToolUse` | HC-001 Document-First | `agent` | Reads SNAPSHOT.yaml, blocks code edits without focus |
-| `PostToolUse` | HC-003 Verification Gate | `prompt` | Detects status→done/closed, reminds about test verification |
-| `PostToolUse` | HC-004 Phase Alignment | `prompt` | Detects status→doing, reminds about phase check |
+| `PreToolUse` | HC-001 Document-First | `command` | Reads SNAPSHOT.yaml, blocks code edits without focus |
+| `PreToolUse` | HC-003 Verification Gate | `command` | **Blocking**: denies status→done/closed/verified while linked TST-* notes are not `passing` (recorded `verification_waiver` escapes; no linked test → `ask`) |
+| `PostToolUse` | HC-004 Phase Alignment | `command` | Detects status→doing, reminds about phase check |
 | `PostToolUse` | HC-005 Risk Scan Trigger | `command` | Detects package/env/CI file changes |
-| `Stop` | HC-006 Close-out Check | `prompt` | Catches forgotten close-out after code changes |
-| `PreCompact` | HC-007 Pre-Compaction | `prompt` | Ensures snapshot is current before context loss |
+| `Stop` | HC-006 Close-out Check + HC-007 Docs Validation | `command` | Runs `tools/scripts/validate-docs.sh` and blocks stop on violations; checks focus is cleared, forces close-out if not |
 | `SessionStart` | HC-002 Snapshot Freshness | `command` | Reminds agent to read SNAPSHOT.yaml |
 
-**Hook types used:**
-- `command`: fast shell scripts for simple pattern matching (HC-002, HC-005)
-- `prompt`: single-turn LLM evaluation for semantic understanding (HC-003, HC-004, HC-006, HC-007)
-- `agent`: subagent with file access for checks that need to read project files (HC-001)
+**All hooks are `command` type** (fast shell scripts, no API calls). This avoids LLM cost/latency and 529 overload errors. Stop hooks use `{decision: "block", reason: "..."}` to force continuation. All scripts use `$CLAUDE_PROJECT_DIR` for path resolution. HC-003 and HC-007 need `python3` on PATH (stdlib only); they fail open with a note if it is missing, so a broken runtime never bricks edits — but treat that note as a setup error.
+
+Session hooks are the innermost of three enforcement layers: the same validator also runs at git pre-commit (`bash tools/scripts/install-git-hooks.sh` to install) and in CI (`.github/workflows/validate-docs.yml`). Session hooks and pre-commit can be bypassed; CI cannot — that layering is deliberate.
 
 See `tools/instructions/HOOKS.md` for the full hook contract specifications and `hooks/` in this directory for the implementations.
 
