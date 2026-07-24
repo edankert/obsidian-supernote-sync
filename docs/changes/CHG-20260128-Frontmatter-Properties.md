@@ -1,6 +1,7 @@
 ---
 type: "[[change]]"
 id: CHG-20260128-Frontmatter
+aliases: ["CHG-20260128-Frontmatter"]
 title: "Redesign frontmatter properties (simplified to 2)"
 status: merged
 owner: Edwin

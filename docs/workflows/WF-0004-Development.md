@@ -1,6 +1,7 @@
 ---
 type: "[[workflow]]"
 id: WF-0004
+aliases: ["WF-0004"]
 title: "Development Workflow"
 status: active
 owner: Edwin

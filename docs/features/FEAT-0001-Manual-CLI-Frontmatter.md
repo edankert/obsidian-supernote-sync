@@ -1,9 +1,10 @@
 ---
 type: "[[feature]]"
 id: FEAT-0001
+aliases: ["FEAT-0001"]
 title: "Phase 2: Manual CLI with Frontmatter Support"
 status: done
-phase: 2
+phase: []
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-24
@@ -11,19 +12,9 @@ source:
   - "PLAN.md"
   - "docs/IMPLEMENTATION_STATUS.md"
 goal: "Enable users to control .note type and updates via frontmatter properties with manual CLI commands"
-requirements:
-  - "[[REQ-0001-Frontmatter-Parsing]]"
-  - "[[REQ-0002-Update-Mode]]"
-tasks:
-  - "[[TASK-0001-Frontmatter-Parsing]]"
-  - "[[TASK-0002-Update-Mode]]"
-  - "[[TASK-0003-Realtime-Support]]"
-  - "[[TASK-0004-Configuration-Examples]]"
 release: "v0.2.0-alpha"
 related:
   - "[[FEAT-0002-Python-Backend-API]]"
-tests:
-  - "[[TST-0001-Frontmatter-Parsing]]"
 ---
 
 # Phase 2: Manual CLI with Frontmatter Support

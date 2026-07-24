@@ -1,6 +1,7 @@
 ---
 type: "[[requirement]]"
 id: REQ-0001
+aliases: ["REQ-0001"]
 title: "CLI reads and respects frontmatter properties"
 status: verified
 owner: Edwin
@@ -8,7 +9,7 @@ created: 2026-01-20
 updated: 2026-01-31
 priority: high
 scope: converters
-phase: 2
+phase: []
 source:
   - "PLAN.md"
   - "docs/STEP1_REQUIREMENTS.md"
@@ -17,8 +18,7 @@ acceptance:
   - "Properties override default settings"
   - "Properties are optional with graceful fallback"
   - "Validation prevents invalid configurations"
-implements:
-  - "[[FEAT-0001-Manual-CLI-Frontmatter]]"
+implements: ["[[FEAT-0001-Manual-CLI-Frontmatter]]"]
 verifies:
   - "tests/test_frontmatter_parsing.py"
 tests:

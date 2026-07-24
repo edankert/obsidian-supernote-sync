@@ -1,6 +1,7 @@
 ---
 type: "[[task]]"
 id: TASK-0011
+aliases: ["TASK-0011"]
 title: "Create Obsidian Plugin Skeleton"
 status: done
 phase: 3C
@@ -10,6 +11,7 @@ updated: 2026-01-31
 source:
   - "PLAN.md"
 parent: "[[FEAT-0004-Obsidian-Plugin]]"
+fixes: []
 effort: M
 depends: []
 blocks:

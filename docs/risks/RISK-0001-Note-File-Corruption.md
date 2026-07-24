@@ -1,6 +1,7 @@
 ---
 type: "[[risk]]"
 id: RISK-0001
+aliases: ["RISK-0001"]
 title: ".note file corruption during update"
 status: mitigating
 owner: Edwin
@@ -15,7 +16,6 @@ mitigation:
   - "Validate file structure before and after"
   - "Maintain backup of original"
   - "Extensive device testing"
-mitigation_tasks: []
 related: []
 ---
 

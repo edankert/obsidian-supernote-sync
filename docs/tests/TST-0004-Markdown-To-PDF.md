@@ -1,6 +1,7 @@
 ---
 type: "[[test]]"
 id: TST-0004
+aliases: ["TST-0004"]
 title: "Markdown to PDF converter tests"
 status: blocked
 owner: Edwin
@@ -12,10 +13,6 @@ scope: feature
 kind: automated
 level: integration
 entrypoint: "pytest tests/test_markdown_to_pdf.py -v"
-requirements: []
-features: []
-issues: []
-tasks: []
 artifacts: []
 evidence:
   - "Skipped - requires GTK+ libraries for WeasyPrint"

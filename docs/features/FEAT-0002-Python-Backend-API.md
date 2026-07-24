@@ -1,9 +1,10 @@
 ---
 type: "[[feature]]"
 id: FEAT-0002
+aliases: ["FEAT-0002"]
 title: "Phase 3A: Python Backend API (FastAPI)"
 status: done
-phase: 3
+phase: []
 owner: Edwin
 created: 2026-01-24
 updated: 2026-01-24
@@ -11,18 +12,10 @@ source:
   - "PLAN.md"
   - "docs/IMPLEMENTATION_STATUS.md"
 goal: "Create FastAPI server wrapping existing converters with REST API and WebSocket support"
-requirements:
-  - "[[REQ-0003-REST-API]]"
-tasks:
-  - "[[TASK-0005-FastAPI-Server]]"
-  - "[[TASK-0006-Conversion-Endpoints]]"
-  - "[[TASK-0007-WebSocket-Support]]"
-  - "[[TASK-0008-Workflow-Endpoints]]"
 release: "v0.3.0-alpha"
 related:
   - "[[FEAT-0001-Manual-CLI-Frontmatter]]"
   - "[[FEAT-0003-Web-Dashboard-MVP]]"
-tests: []
 ---
 
 # Phase 3A: Python Backend API (FastAPI)

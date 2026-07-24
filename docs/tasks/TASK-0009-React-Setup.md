@@ -1,6 +1,7 @@
 ---
 type: "[[task]]"
 id: TASK-0009
+aliases: ["TASK-0009"]
 title: "Set Up React + Vite + Tailwind Project"
 status: done
 phase: 3B
@@ -10,6 +11,7 @@ updated: 2026-01-31
 source:
   - "PLAN.md"
 parent: "[[FEAT-0003-Web-Dashboard-MVP]]"
+fixes: []
 effort: M
 depends: []
 blocks:

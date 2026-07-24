@@ -1,6 +1,7 @@
 ---
 type: "[[workflow]]"
 id: WF-0005
+aliases: ["WF-0005"]
 title: "API Server Workflow"
 status: active
 owner: Edwin

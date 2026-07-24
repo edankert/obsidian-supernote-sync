@@ -1,6 +1,7 @@
 ---
 type: "[[test]]"
 id: TST-0005
+aliases: ["TST-0005"]
 title: "Pandoc converter test suite"
 status: passing
 owner: Edwin
@@ -12,10 +13,6 @@ scope: feature
 kind: automated
 level: integration
 entrypoint: "pytest tests/test_pandoc_converter.py -v"
-requirements: []
-features: []
-issues: []
-tasks: []
 artifacts: []
 evidence:
   - "Tests passing"

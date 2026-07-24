@@ -1,6 +1,7 @@
 ---
 type: "[[requirement]]"
 id: REQ-0004
+aliases: ["REQ-0004"]
 title: "Web dashboard for workflow management"
 status: verified
 owner: Edwin
@@ -8,15 +9,14 @@ created: 2026-01-24
 updated: 2026-01-31
 priority: medium
 scope: dashboard
-phase: 3
+phase: []
 source:
   - "PLAN.md"
 acceptance:
   - "Pre-defined workflow selection UI"
   - "Configuration panels for folders and devices"
   - "Sync status and history display"
-implements:
-  - "[[FEAT-0003-Web-Dashboard-MVP]]"
+implements: ["[[FEAT-0003-Web-Dashboard-MVP]]"]
 verifies:
   - "Manual testing of dashboard"
 tests: []

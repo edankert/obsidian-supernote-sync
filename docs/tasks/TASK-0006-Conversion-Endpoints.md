@@ -1,6 +1,7 @@
 ---
 type: "[[task]]"
 id: TASK-0006
+aliases: ["TASK-0006"]
 title: "Implement Conversion REST Endpoints"
 status: done
 phase: 3A
@@ -10,6 +11,7 @@ updated: 2026-01-24
 source:
   - "PLAN.md"
 parent: "[[FEAT-0002-Python-Backend-API]]"
+fixes: []
 effort: L
 depends:
   - "[[TASK-0005-FastAPI-Server]]"

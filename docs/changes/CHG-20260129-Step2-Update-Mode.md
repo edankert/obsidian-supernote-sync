@@ -1,6 +1,7 @@
 ---
 type: "[[change]]"
 id: CHG-20260129-Step2
+aliases: ["CHG-20260129-Step2"]
 title: "Implement .note file update mode (Steps 1-2)"
 status: merged
 owner: Edwin

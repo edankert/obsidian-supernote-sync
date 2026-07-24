@@ -1,15 +1,17 @@
 ---
 type: "[[task]]"
 id: TASK-0001
+aliases: ["TASK-0001"]
 title: "Implement Frontmatter Property Parsing"
 status: done
-phase: 2
+phase: []
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-24
 source:
   - "PLAN.md"
 parent: "[[FEAT-0001-Manual-CLI-Frontmatter]]"
+fixes: []
 effort: M
 depends: []
 blocks:

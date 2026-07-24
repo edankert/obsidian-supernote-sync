@@ -1,6 +1,7 @@
 ---
 type: "[[task]]"
 id: TASK-0010
+aliases: ["TASK-0010"]
 title: "Build Workflow and Conversion UI Components"
 status: done
 phase: 3B
@@ -10,6 +11,7 @@ updated: 2026-01-31
 source:
   - "PLAN.md"
 parent: "[[FEAT-0003-Web-Dashboard-MVP]]"
+fixes: []
 effort: L
 depends:
   - "[[TASK-0009-React-Setup]]"

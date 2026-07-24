@@ -1,6 +1,7 @@
 ---
 type: "[[adr]]"
 id: ADR-0002
+aliases: ["ADR-0002"]
 title: "Use hybrid Obsidian Plugin + Python Backend + Web Dashboard"
 status: accepted
 owner: Edwin

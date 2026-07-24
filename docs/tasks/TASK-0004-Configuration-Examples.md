@@ -1,15 +1,17 @@
 ---
 type: "[[task]]"
 id: TASK-0004
+aliases: ["TASK-0004"]
 title: "Create Configuration Examples and Workflow Guides"
 status: done
-phase: 2
+phase: []
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-24
 source:
   - "PLAN.md"
 parent: "[[FEAT-0001-Manual-CLI-Frontmatter]]"
+fixes: []
 effort: M
 depends:
   - "[[TASK-0003-Realtime-Support]]"

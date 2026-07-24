@@ -1,15 +1,17 @@
 ---
 type: "[[task]]"
 id: TASK-0002
+aliases: ["TASK-0002"]
 title: "Implement .note File Update Mode"
 status: done
-phase: 2
+phase: []
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-24
 source:
   - "PLAN.md"
 parent: "[[FEAT-0001-Manual-CLI-Frontmatter]]"
+fixes: []
 effort: L
 depends:
   - "[[TASK-0001-Frontmatter-Parsing]]"

@@ -1,6 +1,7 @@
 ---
 type: "[[requirement]]"
 id: REQ-0005
+aliases: ["REQ-0005"]
 title: "Obsidian plugin for native integration"
 status: draft
 owner: Edwin
@@ -8,15 +9,14 @@ created: 2026-01-31
 updated: 2026-01-31
 priority: high
 scope: plugin
-phase: 3
+phase: []
 source:
   - "PLAN.md"
 acceptance:
   - "Ribbon button for quick actions"
   - "Commands for convert, sync, dashboard"
   - "Settings tab for configuration"
-implements:
-  - "[[FEAT-0004-Obsidian-Plugin]]"
+implements: ["[[FEAT-0004-Obsidian-Plugin]]"]
 verifies: []
 tests: []
 ---

@@ -1,22 +1,20 @@
 ---
 type: "[[feature]]"
 id: FEAT-0006
+aliases: ["FEAT-0006"]
 title: "Phase 4: Advanced Features & Cloud Integration"
 status: backlog
-phase: 4
+phase: []
 owner: unassigned
 created: 2026-01-31
 updated: 2026-01-31
 source:
   - "PLAN.md"
 goal: "Cloud sync via Supernote Cloud API, scheduled workflows, conflict resolution"
-requirements: []
-tasks: []
 release: ""
 related:
   - "[[FEAT-0004-Obsidian-Plugin]]"
   - "[[FEAT-0005-Visual-Workflow-Builder]]"
-tests: []
 ---
 
 # Phase 4: Advanced Features & Cloud Integration

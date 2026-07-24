@@ -1,6 +1,7 @@
 ---
 type: "[[adr]]"
 id: ADR-0001
+aliases: ["ADR-0001"]
 title: "Use YAML frontmatter for configuration"
 status: accepted
 owner: Edwin

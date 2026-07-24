@@ -1,6 +1,7 @@
 ---
 type: "[[task]]"
 id: TASK-0005
+aliases: ["TASK-0005"]
 title: "Set Up FastAPI Server Infrastructure"
 status: done
 phase: 3A
@@ -10,6 +11,7 @@ updated: 2026-01-24
 source:
   - "PLAN.md"
 parent: "[[FEAT-0002-Python-Backend-API]]"
+fixes: []
 effort: M
 depends: []
 blocks:

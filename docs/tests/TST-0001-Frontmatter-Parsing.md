@@ -1,6 +1,7 @@
 ---
 type: "[[test]]"
 id: TST-0001
+aliases: ["TST-0001"]
 title: "Frontmatter parsing test suite"
 status: passing
 owner: Edwin
@@ -12,12 +13,7 @@ scope: feature
 kind: automated
 level: unit
 entrypoint: "pytest tests/test_frontmatter_parsing.py -v"
-requirements:
-  - "[[REQ-0001-Frontmatter-Parsing]]"
-features:
-  - "[[FEAT-0001-Manual-CLI-Frontmatter]]"
-issues: []
-tasks: []
+verifies: ["[[FEAT-0001-Manual-CLI-Frontmatter]]"]
 artifacts: []
 evidence:
   - "34 tests passing"

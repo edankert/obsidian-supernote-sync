@@ -1,6 +1,7 @@
 ---
 type: "[[risk]]"
 id: RISK-0003
+aliases: ["RISK-0003"]
 title: "Cloud API dependency for sync"
 status: open
 owner: Edwin
@@ -14,7 +15,6 @@ mitigation:
   - "Local sync as fallback"
   - "Cache locally during connectivity issues"
   - "Graceful degradation"
-mitigation_tasks: []
 related:
   - "[[FEAT-0006-Cloud-Integration]]"
 ---

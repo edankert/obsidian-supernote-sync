@@ -1,15 +1,17 @@
 ---
 type: "[[task]]"
 id: TASK-0003
+aliases: ["TASK-0003"]
 title: "Add Realtime Handwriting Recognition Support"
 status: done
-phase: 2
+phase: []
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-24
 source:
   - "PLAN.md"
 parent: "[[FEAT-0001-Manual-CLI-Frontmatter]]"
+fixes: []
 effort: S
 depends:
   - "[[TASK-0002-Update-Mode]]"

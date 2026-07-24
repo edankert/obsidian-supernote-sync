@@ -1,6 +1,7 @@
 ---
 type: "[[adr]]"
 id: ADR-0003
+aliases: ["ADR-0003"]
 title: "Use Supernote device-based text recognition"
 status: accepted
 owner: Edwin

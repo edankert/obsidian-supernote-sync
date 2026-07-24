@@ -1,6 +1,7 @@
 ---
 type: registry
 id: PHASES
+aliases: ["PHASES"]
 title: "Phase Registry"
 updated: 2026-01-31
 ---

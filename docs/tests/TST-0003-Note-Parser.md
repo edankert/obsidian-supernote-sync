@@ -1,6 +1,7 @@
 ---
 type: "[[test]]"
 id: TST-0003
+aliases: ["TST-0003"]
 title: "Note parser test suite"
 status: passing
 owner: Edwin
@@ -12,10 +13,6 @@ scope: feature
 kind: automated
 level: unit
 entrypoint: "pytest tests/test_note_parser.py -v"
-requirements: []
-features: []
-issues: []
-tasks: []
 artifacts: []
 evidence:
   - "4/6 tests passing"

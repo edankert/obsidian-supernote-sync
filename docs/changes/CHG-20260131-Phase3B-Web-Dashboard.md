@@ -1,6 +1,7 @@
 ---
 type: "[[change]]"
 id: CHG-20260131-Phase3B
+aliases: ["CHG-20260131-Phase3B"]
 title: "Implement Phase 3B: Web Dashboard MVP"
 status: merged
 owner: Edwin

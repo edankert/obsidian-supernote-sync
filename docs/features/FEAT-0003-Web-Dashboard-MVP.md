@@ -1,9 +1,10 @@
 ---
 type: "[[feature]]"
 id: FEAT-0003
+aliases: ["FEAT-0003"]
 title: "Phase 3B: Web Dashboard MVP"
 status: done
-phase: 3
+phase: []
 owner: Edwin
 created: 2026-01-24
 updated: 2026-01-31
@@ -11,16 +12,10 @@ source:
   - "PLAN.md"
   - "docs/IMPLEMENTATION_STATUS.md"
 goal: "Create React + Tailwind web dashboard for workflow management and conversion UI"
-requirements:
-  - "[[REQ-0004-Web-Dashboard]]"
-tasks:
-  - "[[TASK-0009-React-Setup]]"
-  - "[[TASK-0010-Workflow-UI]]"
 release: "v0.3.0-alpha"
 related:
   - "[[FEAT-0002-Python-Backend-API]]"
   - "[[FEAT-0004-Obsidian-Plugin]]"
-tests: []
 ---
 
 # Phase 3B: Web Dashboard MVP

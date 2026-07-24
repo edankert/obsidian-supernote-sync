@@ -1,6 +1,7 @@
 ---
 type: "[[test]]"
 id: TST-0002
+aliases: ["TST-0002"]
 title: "Basic package structure tests"
 status: passing
 owner: Edwin
@@ -12,10 +13,6 @@ scope: system
 kind: automated
 level: unit
 entrypoint: "pytest tests/test_basic.py -v"
-requirements: []
-features: []
-issues: []
-tasks: []
 artifacts: []
 evidence:
   - "2 tests passing"

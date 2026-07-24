@@ -1,6 +1,7 @@
 ---
 type: "[[requirement]]"
 id: REQ-0002
+aliases: ["REQ-0002"]
 title: "Update existing .note files preserving handwriting"
 status: verified
 owner: Edwin
@@ -8,7 +9,7 @@ created: 2026-01-20
 updated: 2026-01-31
 priority: high
 scope: converters
-phase: 2
+phase: []
 source:
   - "PLAN.md"
 acceptance:
@@ -16,8 +17,7 @@ acceptance:
   - "Handwritten annotations preserved exactly"
   - "New template content displays correctly"
   - "Updated .note opens on device without errors"
-implements:
-  - "[[FEAT-0001-Manual-CLI-Frontmatter]]"
+implements: ["[[FEAT-0001-Manual-CLI-Frontmatter]]"]
 verifies:
   - "Manual device testing"
 tests: []

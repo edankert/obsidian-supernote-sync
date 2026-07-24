@@ -1,6 +1,7 @@
 ---
 type: "[[risk]]"
 id: RISK-0002
+aliases: ["RISK-0002"]
 title: "Data loss from sync conflicts"
 status: open
 owner: Edwin
@@ -14,7 +15,6 @@ mitigation:
   - "Version history maintained"
   - "User always sees options"
   - "Conflict resolution with AI suggestions"
-mitigation_tasks: []
 related:
   - "[[FEAT-0006-Cloud-Integration]]"
 ---

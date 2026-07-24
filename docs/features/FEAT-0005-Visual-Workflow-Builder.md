@@ -1,22 +1,19 @@
 ---
 type: "[[feature]]"
 id: FEAT-0005
+aliases: ["FEAT-0005"]
 title: "Phase 3D: Visual Workflow Builder"
 status: planned
-phase: 3
+phase: []
 owner: unassigned
 created: 2026-01-31
 updated: 2026-01-31
 source:
   - "PLAN.md"
 goal: "Implement drag-and-drop workflow designer with React Flow"
-requirements:
-  - "[[REQ-0006-Visual-Workflow-Builder]]"
-tasks: []
 release: ""
 related:
   - "[[FEAT-0003-Web-Dashboard-MVP]]"
-tests: []
 ---
 
 # Phase 3D: Visual Workflow Builder

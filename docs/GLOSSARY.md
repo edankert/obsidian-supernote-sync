@@ -1,6 +1,7 @@
 ---
 type: glossary
 id: GLOSSARY
+aliases: ["GLOSSARY"]
 status: active
 owner: team:docs
 created: 2026-01-26

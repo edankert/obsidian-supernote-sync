@@ -1,6 +1,7 @@
 ---
 type: "[[requirement]]"
 id: REQ-0003
+aliases: ["REQ-0003"]
 title: "REST API wrapping existing converters"
 status: verified
 owner: Edwin
@@ -8,15 +9,14 @@ created: 2026-01-24
 updated: 2026-01-31
 priority: high
 scope: api
-phase: 3
+phase: []
 source:
   - "PLAN.md"
 acceptance:
   - "All conversion functions accessible via HTTP endpoints"
   - "Real-time progress updates via WebSocket"
   - "Workflow management endpoints functional"
-implements:
-  - "[[FEAT-0002-Python-Backend-API]]"
+implements: ["[[FEAT-0002-Python-Backend-API]]"]
 verifies:
   - "curl http://localhost:8765/status"
 tests: []

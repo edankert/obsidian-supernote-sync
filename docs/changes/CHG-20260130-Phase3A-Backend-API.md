@@ -1,6 +1,7 @@
 ---
 type: "[[change]]"
 id: CHG-20260130-Phase3A
+aliases: ["CHG-20260130-Phase3A"]
 title: "Implement Phase 3A: Python Backend API"
 status: merged
 owner: Edwin

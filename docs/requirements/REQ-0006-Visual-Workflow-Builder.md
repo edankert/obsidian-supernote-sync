@@ -1,6 +1,7 @@
 ---
 type: "[[requirement]]"
 id: REQ-0006
+aliases: ["REQ-0006"]
 title: "Visual drag-and-drop workflow designer"
 status: draft
 owner: unassigned
@@ -8,15 +9,14 @@ created: 2026-01-31
 updated: 2026-01-31
 priority: medium
 scope: dashboard
-phase: 3
+phase: []
 source:
   - "PLAN.md"
 acceptance:
   - "React Flow integration for drag-and-drop"
   - "Building blocks for source, transform, output"
   - "YAML export/import of workflows"
-implements:
-  - "[[FEAT-0005-Visual-Workflow-Builder]]"
+implements: ["[[FEAT-0005-Visual-Workflow-Builder]]"]
 verifies: []
 tests: []
 ---

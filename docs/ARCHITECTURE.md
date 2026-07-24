@@ -1,6 +1,7 @@
 ---
 type: reference
 id: ARCH
+aliases: ["ARCH"]
 status: reference
 owner: group:maintainers
 created: 2026-01-26
