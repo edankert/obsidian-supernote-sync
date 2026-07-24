@@ -139,7 +139,7 @@ items:
     REQ-0001:
       file: "docs/requirements/REQ-0001-Frontmatter-Parsing.md"
       title: "CLI reads and respects frontmatter properties"
-      status: "verified"
+      status: "implemented"
       owner: "Edwin"
       priority: "high"
       scope: "converters"
@@ -154,7 +154,7 @@ items:
     REQ-0002:
       file: "docs/requirements/REQ-0002-Update-Mode.md"
       title: "Update existing .note files preserving handwriting"
-      status: "verified"
+      status: "implemented"
       owner: "Edwin"
       priority: "high"
       scope: "converters"
@@ -169,7 +169,7 @@ items:
     REQ-0003:
       file: "docs/requirements/REQ-0003-REST-API.md"
       title: "REST API wrapping existing converters"
-      status: "verified"
+      status: "implemented"
       owner: "Edwin"
       priority: "high"
       scope: "api"
@@ -183,7 +183,7 @@ items:
     REQ-0004:
       file: "docs/requirements/REQ-0004-Web-Dashboard.md"
       title: "Web dashboard for workflow management"
-      status: "verified"
+      status: "implemented"
       owner: "Edwin"
       priority: "medium"
       scope: "dashboard"

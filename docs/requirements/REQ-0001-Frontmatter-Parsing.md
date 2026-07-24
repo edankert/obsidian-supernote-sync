@@ -3,7 +3,7 @@ type: "[[requirement]]"
 id: REQ-0001
 aliases: ["REQ-0001"]
 title: "CLI reads and respects frontmatter properties"
-status: verified
+status: implemented
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-31

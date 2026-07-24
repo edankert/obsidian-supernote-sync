@@ -3,7 +3,7 @@ type: "[[requirement]]"
 id: REQ-0004
 aliases: ["REQ-0004"]
 title: "Web dashboard for workflow management"
-status: verified
+status: implemented
 owner: Edwin
 created: 2026-01-24
 updated: 2026-01-31

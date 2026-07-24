@@ -3,7 +3,7 @@ type: "[[requirement]]"
 id: REQ-0003
 aliases: ["REQ-0003"]
 title: "REST API wrapping existing converters"
-status: verified
+status: implemented
 owner: Edwin
 created: 2026-01-24
 updated: 2026-01-31

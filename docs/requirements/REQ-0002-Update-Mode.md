@@ -3,7 +3,7 @@ type: "[[requirement]]"
 id: REQ-0002
 aliases: ["REQ-0002"]
 title: "Update existing .note files preserving handwriting"
-status: verified
+status: implemented
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-31
