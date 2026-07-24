@@ -1,6 +1,7 @@
 ---
 type: "[[release]]"
 id: REL-0000
+aliases: ["REL-0000"]
 title: ""
 status: draft
 version: ""

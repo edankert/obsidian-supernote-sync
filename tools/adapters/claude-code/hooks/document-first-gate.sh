@@ -29,7 +29,8 @@ case "$FILE_PATH" in
 esac
 
 # Check SNAPSHOT.yaml for active focus
-SNAPSHOT="SNAPSHOT.yaml"
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
+SNAPSHOT="$PROJECT_DIR/SNAPSHOT.yaml"
 if [ ! -f "$SNAPSHOT" ]; then
   # No SNAPSHOT.yaml — not a project-os repo, allow
   exit 0
