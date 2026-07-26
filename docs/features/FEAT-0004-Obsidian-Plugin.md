@@ -3,7 +3,7 @@ type: "[[feature]]"
 id: FEAT-0004
 aliases: ["FEAT-0004"]
 title: "Phase 3C: Obsidian Plugin"
-status: in-progress
+status: doing
 phase: []
 owner: Edwin
 created: 2026-01-31

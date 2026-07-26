@@ -3,7 +3,7 @@ type: "[[test]]"
 id: TST-0004
 aliases: ["TST-0004"]
 title: "Markdown to PDF converter tests"
-status: blocked
+status: ready
 owner: Edwin
 created: 2026-01-19
 updated: 2026-01-31
@@ -17,6 +17,8 @@ artifacts: []
 evidence:
   - "Skipped - requires GTK+ libraries for WeasyPrint"
 last_run: "2026-01-31"
+last_verified: 2026-01-31
+
 ---
 
 # Markdown to PDF Converter Tests

@@ -3,7 +3,7 @@ type: "[[risk]]"
 id: RISK-0001
 aliases: ["RISK-0001"]
 title: ".note file corruption during update"
-status: mitigating
+status: open
 owner: Edwin
 created: 2026-01-20
 updated: 2026-01-31

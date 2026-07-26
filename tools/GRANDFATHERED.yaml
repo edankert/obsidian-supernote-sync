@@ -1,0 +1,27 @@
+# Grandfather ledger — debt each gate carried when it was promoted to error.
+#
+# Read by tools/scripts/validate-docs.py. An item listed here reports as a
+# WARNING for that gate; every other item is an ERROR. There is no date-based
+# exemption: editing a listed note does not re-arm the gate on it, and editing
+# an unlisted note does not exempt it.
+#
+# This file only shrinks. When an item's debt is paid, delete its line — a
+# stale entry is inert but misleading. Regenerate with:
+#     python3 tools/scripts/grandfather.py --write --refresh
+#
+# ADR-0011 clause 3 prefers clearing debt to listing it. Entries here are an
+# admission that the debt was not cleared, and each one is a small backlog item.
+version: 1
+cutover: "2026-07-25"
+count: 5
+gates:
+  VERIFY:
+    FEAT-0001: "FEAT-0001 is done but linked manual test TST-0001 is passing yet stale (last_verified over 90 days ago)"
+  REQ-BOXES:
+    REQ-0001: "REQ-0001 is 'implemented' (terminal) with 4 acceptance criteria but no verification record — its note has no ticked acceptance checkboxes (docs/req..."
+    REQ-0002: "REQ-0002 is 'implemented' (terminal) with 4 acceptance criteria but no verification record — its note has no ticked acceptance checkboxes (docs/req..."
+    REQ-0003: "REQ-0003 is 'implemented' (terminal) with 3 acceptance criteria but no verification record — its note has no ticked acceptance checkboxes (docs/req..."
+    REQ-0004: "REQ-0004 is 'implemented' (terminal) with 3 acceptance criteria but no verification record — its note has no ticked acceptance checkboxes (docs/req..."
+  FEATURE-REQ: {}
+  TEST-FIELDS: {}
+  WAIVER: {}

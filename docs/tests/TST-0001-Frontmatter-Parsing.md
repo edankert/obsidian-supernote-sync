@@ -19,6 +19,8 @@ evidence:
   - "34 tests passing"
   - "92% code coverage"
 last_run: "2026-01-31"
+last_verified: 2026-01-31
+
 ---
 
 # Frontmatter Parsing Test Suite

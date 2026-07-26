@@ -17,6 +17,8 @@ artifacts: []
 evidence:
   - "Tests passing"
 last_run: "2026-01-31"
+last_verified: 2026-01-31
+
 ---
 
 # Pandoc Converter Test Suite

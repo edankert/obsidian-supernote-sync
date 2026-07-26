@@ -17,6 +17,8 @@ artifacts: []
 evidence:
   - "4/6 tests passing"
 last_run: "2026-01-31"
+last_verified: 2026-01-31
+
 ---
 
 # Note Parser Test Suite

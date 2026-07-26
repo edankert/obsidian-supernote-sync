@@ -88,7 +88,7 @@ items:
     FEAT-0004:
       file: "docs/features/FEAT-0004-Obsidian-Plugin.md"
       title: "Phase 3C: Obsidian Plugin"
-      status: "in-progress"
+      status: "doing"
       owner: "Edwin"
       goal: "Create TypeScript Obsidian plugin for native integration with ribbon, commands, and settings"
       phase: 3
@@ -226,7 +226,7 @@ items:
     RISK-0001:
       file: "docs/risks/RISK-0001-Note-File-Corruption.md"
       title: ".note file corruption during update"
-      status: "mitigating"
+      status: open
       owner: "Edwin"
       likelihood: "low"
       impact: "high"
@@ -309,7 +309,7 @@ items:
     TST-0004:
       file: "docs/tests/TST-0004-Markdown-To-PDF.md"
       title: "Markdown to PDF converter tests"
-      status: "blocked"
+      status: ready
       owner: "Edwin"
       scope: "feature"
       kind: "automated"
