@@ -29,6 +29,7 @@ docs_system:
     - docs/IMPLEMENTATION_STATUS.md
 
 counters:
+  DES: 1
   ADR: 3
   CHG:
     last_date: 20260705
