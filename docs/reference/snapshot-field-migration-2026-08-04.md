@@ -13,10 +13,17 @@ related: []
 
 # Snapshot field migration record
 
-The values `SNAPSHOT.yaml` carried for `title:`/`goal:` in **obsidian-supernote-sync** before ADR-0018
-made those fields derived from the notes. Recorded so the migration is lossless and
-needs no per-item judgement: anything worth keeping can be mined from here later, and
-it is legitimate for that never to happen.
+Every `title:`/`goal:` value **obsidian-supernote-sync**'s `SNAPSHOT.yaml` carried before ADR-0018 made those
+fields derived, where it differed from the note that now supplies it. Includes entries
+later removed by retention, so this is the complete replaced set, not just the survivors.
 
-0 value(s) replaced.
+Reconstructed from `7b9aa24c~1` after the first pass wrote an incomplete record: the rollout
+re-ran the recorder *after* migrating, when there was no drift left to capture.
+
+1 value(s) replaced.
+
+## TASK-0012 (`title`)
+
+- **was:** Implement ribbon button and commands
+- **now:** Implement Ribbon Button and Commands
 
